@@ -1,48 +1,55 @@
-# p2p-system
+# P2P System
 
-Мониторинг P2P курсов USDT/USDC к UAH на Binance и Bybit.
+Система мониторинга P2P курсов криптовалют на биржах Binance и Bybit.
 
-## Структура папок
+## Что делает
 
-```
+- Каждую минуту собирает топ-20 ордеров с обеих бирж по парам USDT/UAH и USDC/UAH
+- Каждые 15 минут — глубокий снимок (топ-100)
+- Хранит историю в SQLite базе данных
+- Предоставляет аналитику: динамику курса, спред между биржами, статистику мейкеров
+
+## Технический стек
+
+- Python 3.13
+- SQLAlchemy 2.0 — работа с БД
+- httpx — HTTP-клиент для API бирж
+- APScheduler — планировщик сбора
+- pydantic-settings — конфигурация
+- rich — красивый вывод в терминале
+
+## Структура проекта
+
 p2p-system/
-├── config/             # Настройки и переменные окружения
-├── core/
-│   ├── database/       # Модели и сессии SQLAlchemy
-│   ├── exchanges/      # Клиенты Binance и Bybit P2P API
-│   └── utils/          # Логгер и вспомогательные утилиты
+├── core/               # общая инфраструктура
+│   ├── database/       # модели БД и сессии
+│   ├── exchanges/      # клиенты Binance и Bybit
+│   └── utils/          # логгер, часовые пояса
 ├── modules/
-│   └── tracker/        # Планировщик сбора и сохранения данных
-├── data/               # SQLite база данных
-├── logs/               # Лог-файлы
-├── main.py
-└── requirements.txt
-```
+│   └── tracker/        # сборщик данных
+├── scripts/            # точки входа (init_db, run_tracker, market, ...)
+├── config/             # настройки
+├── data/               # SQLite БД (не в репозитории)
+└── logs/               # логи (не в репозитории)
 
-## Как запустить
+## Запуск
 
-```bash
+```powershell
 # Активация виртуального окружения
-python -m venv venv
-venv\Scripts\activate          # Windows
-# source venv/bin/activate     # Linux/macOS
+.\venv\Scripts\Activate.ps1
 
-# Установка зависимостей
-pip install -r requirements.txt
+# Инициализация БД (один раз)
+python scripts/init_db.py
 
-# Копирование конфига
-copy config\.env.example config\.env   # Windows
-# cp config/.env.example config/.env  # Linux/macOS
+# Запуск трекера
+.\scripts\start_tracker.bat
 
-# Запуск
-python main.py
+# Просмотр данных
+python scripts/market.py summary
+python scripts/market.py chart USDT/UAH --hours 1
+python scripts/market.py spread USDT/UAH --hours 6
 ```
 
-## Переменные окружения
+## Часовые пояса
 
-| Переменная | По умолчанию | Описание |
-|---|---|---|
-| `DATABASE_URL` | `sqlite:///data/p2p.db` | URL базы данных |
-| `LOG_LEVEL` | `INFO` | Уровень логирования |
-| `TRACKER_INTERVAL_SECONDS` | `60` | Интервал обычного сбора (сек) |
-| `DEEP_SNAPSHOT_INTERVAL_SECONDS` | `900` | Интервал глубокого снимка (сек) |
+В БД всё хранится в UTC. Отображение и логи — в Europe/Kyiv.
