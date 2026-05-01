@@ -20,35 +20,37 @@
 
 ## Структура проекта
 
-p2p-system/
-├── core/               # общая инфраструктура
-│   ├── database/       # модели БД и сессии
-│   ├── exchanges/      # клиенты Binance и Bybit
-│   └── utils/          # логгер, часовые пояса
-├── modules/
-│   └── tracker/        # сборщик данных
-├── scripts/            # точки входа (init_db, run_tracker, market, ...)
-├── config/             # настройки
-├── data/               # SQLite БД (не в репозитории)
-└── logs/               # логи (не в репозитории)
+    p2p-system/
+    ├── core/               # общая инфраструктура
+    │   ├── database/       # модели БД и сессии
+    │   ├── exchanges/      # клиенты Binance и Bybit
+    │   └── utils/          # логгер, часовые пояса
+    ├── modules/
+    │   └── tracker/        # сборщик данных
+    ├── scripts/            # точки входа (init_db, run_tracker, market, ...)
+    ├── config/             # настройки
+    ├── data/               # SQLite БД (не в репозитории)
+    └── logs/               # логи (не в репозитории)
 
 ## Запуск
 
-```powershell
-# Активация виртуального окружения
-.\venv\Scripts\Activate.ps1
+Активация виртуального окружения:
 
-# Инициализация БД (один раз)
-python scripts/init_db.py
+    .\venv\Scripts\Activate.ps1
 
-# Запуск трекера
-.\scripts\start_tracker.bat
+Инициализация БД (один раз):
 
-# Просмотр данных
-python scripts/market.py summary
-python scripts/market.py chart USDT/UAH --hours 1
-python scripts/market.py spread USDT/UAH --hours 6
-```
+    python scripts/init_db.py
+
+Запуск трекера:
+
+    .\scripts\start_tracker.bat
+
+Просмотр данных:
+
+    python scripts/market.py summary
+    python scripts/market.py chart USDT/UAH --hours 1
+    python scripts/market.py spread USDT/UAH --hours 6
 
 ## Часовые пояса
 
