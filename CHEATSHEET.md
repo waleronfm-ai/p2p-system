@@ -37,6 +37,19 @@ git: not a git repository               → Не в папке проекта: c
 git push запрашивает пароль             → Авторизация слетела, должно открыться окно браузера для входа
 ```
 
+## Просмотрщик market.py
+
+По умолчанию команды используют чистые цены (фильтр выбросов). Флаг --raw возвращает сырые данные (для диагностики).
+
+```
+python scripts/market.py summary [--hours N] [--raw]
+python scripts/market.py chart USDT/UAH [--hours N] [--side BUY/SELL/BOTH] [--raw]
+python scripts/market.py spread USDT/UAH [--hours N] [--raw]
+python scripts/market.py makers USDT/UAH [--side BUY/SELL] [--top N] [--exchange binance/bybit/both]
+python scripts/market.py latest [--raw]
+python scripts/market.py outliers [--hours N] [--pair USDT/UAH] [--side BUY/SELL]
+```
+
 ## Полезные пути
 ```
 Проект: C:\Users\inkvi\p2p-system

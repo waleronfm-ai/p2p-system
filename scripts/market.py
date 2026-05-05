@@ -705,6 +705,143 @@ def cmd_latest(args: argparse.Namespace) -> None:
             console.print()
 
 
+# ── cmd: outliers ─────────────────────────────────────────────────────────────
+
+def cmd_outliers(args: argparse.Namespace) -> None:
+    hours = getattr(args, "hours", None)
+    pair_arg: str | None = getattr(args, "pair", None)
+    side_arg: str | None = getattr(args, "side", None)
+    cut = _cutoff(hours)
+
+    asset: str | None = None
+    fiat: str | None = None
+    if pair_arg:
+        asset, fiat = _parse_pair(pair_arg)
+
+    trade_type: str | None = side_arg.upper() if side_arg else None
+    period_label = f"последние {hours} ч" if hours else "все данные"
+    console.rule(f"[bold cyan]Выбросы P2P — {period_label}[/bold cyan]")
+
+    with get_session() as session:
+        if not session.execute(select(func.count()).select_from(Snapshot)).scalar():
+            _no_data()
+
+        # Fetch distinct (exchange, asset, fiat, trade_type) combos matching filters
+        w = _snap_where(asset=asset, fiat=fiat, trade_type=trade_type, cut=cut)
+        combos = session.execute(
+            select(Snapshot.exchange, Snapshot.asset, Snapshot.fiat, Snapshot.trade_type)
+            .where(*w)
+            .distinct()
+        ).all()
+
+        if not combos:
+            _no_data(f"Нет снимков за указанный период.")
+
+        # For each combo bulk-load top-5 orders per snapshot, collect outliers
+        # key = (exchange, asset, fiat, trade_type, nickname)
+        from collections import defaultdict
+        import statistics as _stats
+
+        MakerKey = tuple  # (exchange, asset, fiat, trade_type, nickname)
+        appearances: dict[MakerKey, int] = defaultdict(int)
+        out_prices: dict[MakerKey, list[float]] = defaultdict(list)
+        out_volumes: dict[MakerKey, list[float]] = defaultdict(list)
+        out_orders_count: dict[MakerKey, int] = defaultdict(int)  # snapshot appearances
+
+        total_orders_all = 0
+        total_outliers_all = 0
+
+        first_ts_all: datetime | None = None
+        last_ts_all: datetime | None = None
+
+        for exchange, snap_asset, snap_fiat, snap_trade_type in combos:
+            sw = _snap_where(exchange, snap_asset, snap_fiat, snap_trade_type, cut)
+            snaps = session.execute(
+                select(Snapshot.id, Snapshot.collected_at).where(*sw)
+                .order_by(Snapshot.collected_at.asc())
+            ).all()
+            if not snaps:
+                continue
+
+            snap_ts_map = {s.id: s.collected_at for s in snaps}
+            snap_ids = list(snap_ts_map)
+
+            ts_vals = list(snap_ts_map.values())
+            if first_ts_all is None or min(ts_vals) < first_ts_all:
+                first_ts_all = min(ts_vals)
+            if last_ts_all is None or max(ts_vals) > last_ts_all:
+                last_ts_all = max(ts_vals)
+
+            order_col = Order.price.asc() if snap_trade_type == "BUY" else Order.price.desc()
+            all_rows = session.execute(
+                select(
+                    Order.snapshot_id, Order.price, Order.available_amount,
+                    Maker.nickname,
+                )
+                .join(Maker, Order.maker_id == Maker.id)
+                .where(Order.snapshot_id.in_(snap_ids))
+                .order_by(Order.snapshot_id, order_col)
+            ).all()
+
+            for sid, grp in _groupby(all_rows, key=lambda r: r.snapshot_id):
+                rows = list(grp)[:5]
+                total_orders_all += len(rows)
+                _, bad = filter_outliers(rows, snap_trade_type, top_n=5)
+                total_outliers_all += len(bad)
+                for o in bad:
+                    key: MakerKey = (exchange, snap_asset, snap_fiat, snap_trade_type, o.nickname)
+                    appearances[key] += 1
+                    out_prices[key].append(float(o.price))
+                    out_volumes[key].append(float(o.available_amount))
+
+    if not appearances:
+        console.print("[green]Выбросов не обнаружено за указанный период.[/green]")
+        return
+
+    # Sort by appearances desc
+    sorted_keys = sorted(appearances, key=lambda k: appearances[k], reverse=True)
+
+    t = Table(show_header=True, header_style="bold cyan", border_style="dim")
+    t.add_column("Биржа")
+    t.add_column("Пара")
+    t.add_column("Сторона")
+    t.add_column("Мейкер")
+    t.add_column("Появлений", justify="right")
+    t.add_column("Цена min", justify="right")
+    t.add_column("Цена max", justify="right")
+    t.add_column("Объём (медиана)", justify="right")
+
+    for i, key in enumerate(sorted_keys):
+        exchange, snap_asset, snap_fiat, snap_trade_type, nickname = key
+        cnt = appearances[key]
+        prices_list = out_prices[key]
+        vols = out_volumes[key]
+        med_vol = _stats.median(vols) if vols else 0.0
+        style = "red" if i < 5 else ""
+        t.add_row(
+            exchange, f"{snap_asset}/{snap_fiat}", snap_trade_type, nickname,
+            str(cnt),
+            f"{min(prices_list):.2f}",
+            f"{max(prices_list):.2f}",
+            f"{med_vol:.2f}",
+            style=style,
+        )
+
+    console.print(t)
+
+    pct = (total_outliers_all / total_orders_all * 100) if total_orders_all else 0.0
+    console.print(
+        f"\nВсего выбросов за период: [bold]{total_outliers_all}[/bold] "
+        f"({pct:.1f}% от всех ордеров)"
+    )
+    console.print(f"Уникальных мейкеров-нарушителей: [bold]{len(appearances)}[/bold]")
+    if first_ts_all and last_ts_all:
+        console.print(
+            f"Период анализа: {format_kyiv(first_ts_all, '%d.%m %H:%M')} → "
+            f"{format_kyiv(last_ts_all, '%d.%m %H:%M')}"
+        )
+
+
 # ── entry point ───────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -739,13 +876,22 @@ def main() -> None:
     p = sub.add_parser("latest", help="Текущий снимок всех пар (топ-5)")
     p.add_argument("--raw", action="store_true", help="Без меток выбросов")
 
+    p = sub.add_parser("outliers", help="Мейкеры-выбросы за период")
+    p.add_argument("--hours", type=int, default=None, metavar="N",
+                   help="Период в часах (по умолчанию все данные)")
+    p.add_argument("--pair", default=None, metavar="ASSET/FIAT",
+                   help="Фильтр по паре, например USDT/UAH")
+    p.add_argument("--side", default=None, choices=["BUY", "SELL"],
+                   help="Фильтр по стороне")
+
     args = parser.parse_args()
     {
-        "summary": cmd_summary,
-        "chart":   cmd_chart,
-        "spread":  cmd_spread,
-        "makers":  cmd_makers,
-        "latest":  cmd_latest,
+        "summary":  cmd_summary,
+        "chart":    cmd_chart,
+        "spread":   cmd_spread,
+        "makers":   cmd_makers,
+        "latest":   cmd_latest,
+        "outliers": cmd_outliers,
     }[args.command](args)
 
 

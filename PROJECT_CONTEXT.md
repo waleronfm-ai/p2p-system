@@ -32,21 +32,23 @@
 - scripts/start_tracker_background.ps1 — вызывается из .bat, настраивает окружение
 - scripts/stop_tracker.ps1 — аварийная остановка по PID
 - data/p2p_backup_20260501_morning.db — бэкап первой ночи сбора (3312 снимков, 66394 ордеров)
+- **Шаг 1 завершён:** фильтр выбросов + внутрибиржевой спред + команда outliers
+  - core/utils/outliers.py — функции median_price, is_outlier, filter_outliers, get_clean_top1 (threshold 2.5%)
+  - scripts/market.py — все команды (summary, chart, spread, latest) по умолчанию работают с очищенными данными, флаг --raw для сырых; в summary добавлена секция "Внутрибиржевой спред (BUY vs SELL)"
+  - Новая команда: python scripts/market.py outliers [--hours N] [--pair X/Y] [--side BUY/SELL]
+  - Проверено на живой БД: Quentin777111 (USDT/UAH BUY Binance, 42.10) и fast_retrade (USDT/UAH BUY Bybit, 42.00) корректно отфильтровываются
 
 ## На чём остановились
 
 Просмотрщик market.py готов и протестирован. БД содержит тестовые данные (~272 снимка за ~35 мин).
 
-## Следующий шаг — Шаг 1 из плана
+## Следующий шаг — Шаг 2 из плана
 
-План на 5 шагов до первого юзабельного прототипа:
-1. Фильтр выбросов (медиана топ-5) + внутрибиржевой спред (BUY-SELL на одной бирже)
-2. Risk-метки банков + надёжность мейкеров
-3. TUI-дашборд с автообновлением
-4. Telegram-алерты
-5. AI-агент через Claude API
-
-Сейчас в работе: Шаг 1.
+Risk-метки банков + надёжность мейкеров:
+- Справочник украинских банков с метками safe / caution / avoid (Ощадбанк → avoid, ПриватБанк/Монобанк → safe и т.д.)
+- Парсинг payment_methods из ордеров, подсветка ордеров в latest по риску банка
+- Метка надёжности мейкеров на базе completion_rate и total_orders
+- Новая команда find для поиска по фильтрам (--bank, --avoid-banks, --min-orders, --min-completion)
 
 ## Workflow обновления документации
 
