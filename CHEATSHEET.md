@@ -1,0 +1,46 @@
+# Шпаргалка P2P-System
+Шпаргалка по запуску и использованию системы. Обновляется по мере добавления функций.
+
+## Старт сессии
+Открыть PowerShell в папке проекта и выполнить:
+```
+cd C:\Users\inkvi\p2p-system
+.\venv\Scripts\Activate.ps1
+$env:PYTHONUTF8 = "1"
+```
+В начале строки должно появиться `(venv)` — окружение активировать
+
+```
+git push                  — отправить на GitHub
+git log --oneline         — история
+git checkout file.py      — откатить файл
+git reset --hard HEAD     — отменить ВСЁ несохранённое (осторожно!)
+```
+Адрес репозитория: https://github.com/waleronfm-ai/p2p-system
+
+## Claude Code
+```
+claude        — запуск
+/effort max   — режим глубоких размышлений
+/cost         — расход токенов
+/status       — статус сессии
+/compact      — сжать историю
+/exit         — выход
+```
+
+## Типовые ошибки
+```
+ModuleNotFoundError: No module named ...  → Активировать venv: .\venv\Scripts\Activate.ps1
+Кракозябры вместо кириллицы             → Включить UTF-8: $env:PYTHONUTF8 = "1"
+Окно трекера не реагирует на Ctrl+C     → .\scripts\stop_tracker.ps1
+git: not a git repository               → Не в папке проекта: cd C:\Users\inkvi\p2p-system
+git push запрашивает пароль             → Авторизация слетела, должно открыться окно браузера для входа
+```
+
+## Полезные пути
+```
+Проект: C:\Users\inkvi\p2p-system
+БД:     data\p2p.db
+Логи:   logs\
+Бэкапы: data\p2p_backup_*.db
+```
