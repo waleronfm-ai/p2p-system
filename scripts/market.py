@@ -16,6 +16,7 @@ import json
 
 from core.banks.registry import RiskLevel, get_worst_risk
 from core.database import Maker, Order, Snapshot, get_session
+from core.utils.maker_trust import format_nickname
 from core.utils.outliers import filter_outliers, get_clean_top1, median_price
 from core.utils.timezone import format_kyiv
 
@@ -613,24 +614,23 @@ def cmd_makers(args: argparse.Namespace) -> None:
         _no_data(f"Нет данных для {asset}/{fiat} {side}.")
 
     t = Table(show_header=True, header_style="bold cyan", border_style="dim")
-    t.add_column("Ник")
+    t.add_column("Мейкер", no_wrap=True)
     t.add_column("Биржа")
     t.add_column("Появлений", justify="right")
     t.add_column("Avg цена",  justify="right")
     t.add_column("Best цена", justify="right")
     t.add_column("Всего сделок", justify="right")
     t.add_column("Completion%", justify="right")
-    t.add_column("★")
 
     for r in results:
+        nic = format_nickname(r.nickname, r.total_orders, r.completion_rate, r.is_merchant)
         t.add_row(
-            r.nickname, r.exchange,
+            nic, r.exchange,
             str(r.appearances),
             f"{r.avg_price:.2f}" if r.avg_price else "—",
             f"{r.best_price:.2f}" if r.best_price else "—",
             str(r.total_orders),
             f"{r.completion_rate:.1f}%",
-            "★" if r.is_merchant else "",
         )
     console.print(t)
 
@@ -695,7 +695,7 @@ def cmd_latest(args: argparse.Namespace) -> None:
             t.add_column("Доступно", justify="right")
             t.add_column(f"Min {fiat}", justify="right")
             t.add_column(f"Max {fiat}", justify="right")
-            t.add_column("Мейкер")
+            t.add_column("Мейкер", no_wrap=True)
             t.add_column("Сделок", justify="right")
             t.add_column("%", justify="right")
             if not raw:
@@ -703,15 +703,15 @@ def cmd_latest(args: argparse.Namespace) -> None:
             t.add_column("Банк")
 
             for i, o in enumerate(orders):
-                merchant = " ★" if o.is_merchant else ""
                 methods = json.loads(o.payment_methods or "[]")
                 bank_name, bank_risk = get_worst_risk(methods)
                 bc = _RISK_COLOR[bank_risk]
                 bank_str = f"[{bc}]{bank_name}[/{bc}]"
+                nic = format_nickname(o.nickname, o.total_orders, o.completion_rate, o.is_merchant)
                 row_vals = [
                     f"{o.price:.2f}", f"{o.available_amount:.2f}",
                     f"{o.min_amount:.0f}", f"{o.max_amount:.0f}",
-                    o.nickname + merchant,
+                    nic,
                     str(o.total_orders), f"{o.completion_rate:.1f}%",
                 ]
                 if not raw:
