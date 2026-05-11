@@ -12,9 +12,19 @@ from rich.console import Console
 from rich.table import Table
 from sqlalchemy import func, select
 
+import json
+
+from core.banks.registry import RiskLevel, get_worst_risk
 from core.database import Maker, Order, Snapshot, get_session
 from core.utils.outliers import filter_outliers, get_clean_top1, median_price
 from core.utils.timezone import format_kyiv
+
+_RISK_COLOR = {
+    RiskLevel.SAFE:    "green",
+    RiskLevel.CAUTION: "yellow",
+    RiskLevel.AVOID:   "red",
+    RiskLevel.UNKNOWN: "dim",
+}
 
 console = Console()
 
@@ -658,7 +668,8 @@ def cmd_latest(args: argparse.Namespace) -> None:
 
             orders = session.execute(
                 select(Order.price, Order.available_amount, Order.min_amount, Order.max_amount,
-                       Maker.nickname, Maker.total_orders, Maker.completion_rate, Maker.is_merchant)
+                       Maker.nickname, Maker.total_orders, Maker.completion_rate, Maker.is_merchant,
+                       Order.payment_methods)
                 .join(Maker, Order.maker_id == Maker.id)
                 .where(Order.snapshot_id == snap_id)
                 .order_by(Order.price.asc() if trade_type == "BUY" else Order.price.desc())
@@ -689,9 +700,14 @@ def cmd_latest(args: argparse.Namespace) -> None:
             t.add_column("%", justify="right")
             if not raw:
                 t.add_column("OK", justify="center")
+            t.add_column("Банк")
 
             for i, o in enumerate(orders):
                 merchant = " ★" if o.is_merchant else ""
+                methods = json.loads(o.payment_methods or "[]")
+                bank_name, bank_risk = get_worst_risk(methods)
+                bc = _RISK_COLOR[bank_risk]
+                bank_str = f"[{bc}]{bank_name}[/{bc}]"
                 row_vals = [
                     f"{o.price:.2f}", f"{o.available_amount:.2f}",
                     f"{o.min_amount:.0f}", f"{o.max_amount:.0f}",
@@ -700,6 +716,7 @@ def cmd_latest(args: argparse.Namespace) -> None:
                 ]
                 if not raw:
                     row_vals.append("[red]✗[/red]" if i in outlier_set else "[green]✓[/green]")
+                row_vals.append(bank_str)
                 t.add_row(*row_vals)
             console.print(t)
             console.print()
