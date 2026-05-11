@@ -14,7 +14,7 @@ from sqlalchemy import func, select
 
 import json
 
-from core.banks.registry import RiskLevel, get_worst_risk
+from core.banks.registry import RiskLevel, find_bank, get_worst_risk, methods_match_bank
 from core.database import Maker, Order, Snapshot, get_session
 from core.utils.maker_trust import format_nickname
 from core.utils.outliers import filter_outliers, get_clean_top1, median_price
@@ -859,6 +859,150 @@ def cmd_outliers(args: argparse.Namespace) -> None:
         )
 
 
+# ── cmd: find ─────────────────────────────────────────────────────────────────
+
+def cmd_find(args: argparse.Namespace) -> None:
+    asset, fiat = _parse_pair(args.pair)
+    side: str = args.side.upper()
+    raw: bool = getattr(args, "raw", False)
+    top_n: int = getattr(args, "top", 10)
+    ex_arg: str = getattr(args, "exchange", "both").lower()
+    min_orders: int = getattr(args, "min_orders", 0)
+    min_completion: float = float(getattr(args, "min_completion", 0))
+    bank_arg: str | None = getattr(args, "bank", None)
+    avoid_arg: str | None = getattr(args, "avoid_banks", None)
+
+    # Resolve --bank
+    bank_entry: dict | None = None
+    if bank_arg:
+        bank_entry = find_bank(bank_arg)
+        if bank_entry is None:
+            console.print(f"[red]Банк '{bank_arg}' не найден в справочнике.[/red]")
+            sys.exit(1)
+
+    # Resolve --avoid-banks (comma-separated)
+    avoid_entries: list[dict] = []
+    if avoid_arg:
+        for token in avoid_arg.split(","):
+            token = token.strip()
+            if not token:
+                continue
+            e = find_bank(token)
+            if e:
+                avoid_entries.append(e)
+            else:
+                console.print(f"[yellow]Предупреждение: банк '{token}' не найден, пропущен.[/yellow]")
+
+    # Build title
+    parts: list[str] = [f"[bold]{asset}/{fiat} {side}[/bold]"]
+    if bank_entry:
+        parts.append(f"банк [green]{bank_entry['name']}[/green]")
+    if avoid_entries:
+        names = ", ".join(f"[red]{e['name']}[/red]" for e in avoid_entries)
+        parts.append(f"без {names}")
+    if min_orders:
+        parts.append(f"мин. {min_orders} сделок")
+    if min_completion:
+        parts.append(f"мин. {min_completion:.0f}% completion")
+    if ex_arg != "both":
+        parts.append(ex_arg)
+    console.rule("[bold cyan]Поиск ордеров: " + " · ".join(parts) + "[/bold cyan]")
+
+    exchanges = ["binance", "bybit"] if ex_arg == "both" else [ex_arg]
+    c = "green" if side == "BUY" else "red"
+
+    with get_session() as session:
+        if not session.execute(select(func.count()).select_from(Snapshot)).scalar():
+            _no_data()
+
+        collected: list[tuple[str, object]] = []  # (exchange, order_row)
+
+        for exchange in exchanges:
+            snap = session.execute(
+                select(Snapshot.id, Snapshot.collected_at)
+                .where(*_snap_where(exchange, asset, fiat, side))
+                .order_by(Snapshot.collected_at.desc()).limit(1)
+            ).one_or_none()
+            if not snap:
+                continue
+            snap_id, snap_ts = snap
+
+            orders = session.execute(
+                select(
+                    Order.price, Order.available_amount,
+                    Order.min_amount, Order.max_amount,
+                    Maker.nickname, Maker.total_orders,
+                    Maker.completion_rate, Maker.is_merchant,
+                    Order.payment_methods,
+                )
+                .join(Maker, Order.maker_id == Maker.id)
+                .where(Order.snapshot_id == snap_id)
+                .order_by(Order.price.asc() if side == "BUY" else Order.price.desc())
+            ).all()
+
+            # Outlier filter over full snapshot
+            if not raw and orders:
+                orders, _ = filter_outliers(orders, side, top_n=len(orders))
+
+            for o in orders:
+                collected.append((exchange, o))
+
+    # Apply user filters
+    results: list[tuple[str, object, list[str]]] = []
+    for exchange, o in collected:
+        if o.total_orders < min_orders:
+            continue
+        if o.completion_rate < min_completion:
+            continue
+        methods = json.loads(o.payment_methods or "[]")
+        if bank_entry and not methods_match_bank(methods, bank_entry):
+            continue
+        if avoid_entries and any(methods_match_bank(methods, e) for e in avoid_entries):
+            continue
+        results.append((exchange, o, methods))
+
+    # Sort: BUY asc (cheapest first), SELL desc (most expensive first)
+    results.sort(key=lambda x: x[1].price if side == "BUY" else -x[1].price)
+    results = results[:top_n]
+
+    if not results:
+        console.print(
+            "\n[yellow]По вашим фильтрам ничего не нашлось. "
+            "Попробуй ослабить условия.[/yellow]\n"
+        )
+        return
+
+    t = Table(show_header=True, header_style="cyan", box=None, padding=(0, 1))
+    t.add_column("Биржа")
+    t.add_column("Цена", justify="right")
+    t.add_column("Объём",   justify="right")
+    t.add_column("Min UAH", justify="right")
+    t.add_column("Max UAH", justify="right")
+    t.add_column("Мейкер", no_wrap=True)
+    t.add_column("Сделок", justify="right")
+    t.add_column("%",      justify="right")
+    t.add_column("Банк")
+
+    for exchange, o, methods in results:
+        bank_name, bank_risk = get_worst_risk(methods)
+        bc = _RISK_COLOR[bank_risk]
+        nic = format_nickname(o.nickname, o.total_orders, o.completion_rate, o.is_merchant)
+        t.add_row(
+            exchange,
+            f"[{c}]{o.price:.2f}[/{c}]",
+            f"{o.available_amount:.2f}",
+            f"{o.min_amount:.0f}",
+            f"{o.max_amount:.0f}",
+            nic,
+            str(o.total_orders),
+            f"{o.completion_rate:.1f}%",
+            f"[{bc}]{bank_name}[/{bc}]",
+        )
+
+    console.print(t)
+    console.print(f"\n[dim]Найдено: {len(results)} ордеров[/dim]\n")
+
+
 # ── entry point ───────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -901,6 +1045,25 @@ def main() -> None:
     p.add_argument("--side", default=None, choices=["BUY", "SELL"],
                    help="Фильтр по стороне")
 
+    p = sub.add_parser("find", help="Поиск ордеров с фильтрами по банку и надёжности")
+    p.add_argument("pair", help="Пара: USDT/UAH, USDC/UAH …")
+    p.add_argument("--side", required=True, choices=["BUY", "SELL"],
+                   help="Сторона: BUY (покупаем) или SELL (продаём)")
+    p.add_argument("--bank", default=None, metavar="NAME",
+                   help="Фильтр по банку (частичное имя): Privat, Mono, Oschad …")
+    p.add_argument("--avoid-banks", default=None, metavar="N1,N2",
+                   help="Исключить банки (через запятую): Oschad,Pumb")
+    p.add_argument("--min-orders", type=int, default=0, metavar="N",
+                   help="Минимум сделок у мейкера (по умолчанию 0)")
+    p.add_argument("--min-completion", type=float, default=0.0, metavar="N",
+                   help="Минимум %% completion (по умолчанию 0)")
+    p.add_argument("--exchange", default="both", choices=["binance", "bybit", "both"],
+                   help="Фильтр по бирже (по умолчанию both)")
+    p.add_argument("--top", type=int, default=10, metavar="N",
+                   help="Сколько показать (по умолчанию 10)")
+    p.add_argument("--raw", action="store_true",
+                   help="Сырые цены без фильтрации выбросов")
+
     args = parser.parse_args()
     {
         "summary":  cmd_summary,
@@ -909,6 +1072,7 @@ def main() -> None:
         "makers":   cmd_makers,
         "latest":   cmd_latest,
         "outliers": cmd_outliers,
+        "find":     cmd_find,
     }[args.command](args)
 
 

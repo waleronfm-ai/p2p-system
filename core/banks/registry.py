@@ -274,3 +274,26 @@ def get_worst_risk(methods: list[str]) -> tuple[str, RiskLevel]:
     if not classified:
         return ("—", RiskLevel.UNKNOWN)
     return max(classified, key=lambda x: _RISK_PRIORITY[x[1]])
+
+
+def find_bank(query: str) -> dict | None:
+    """Знаходить запис банку у реєстрі за частковим рядком запиту.
+
+    Пошук регістронезалежний: "Privat" → ПриватБанк, "oschad" → Ощадбанк.
+    Спочатку перевіряється збіг з binance_keys, потім з name.
+    Повертає dict із registry або None якщо не знайдено.
+    """
+    q = query.lower().strip()
+    for entry in _REGISTRY:
+        for key in entry["binance_keys"]:
+            if q in key or key in q:
+                return entry
+        if q in entry["name"].lower():
+            return entry
+    return None
+
+
+def methods_match_bank(methods: list[str], bank_entry: dict) -> bool:
+    """True якщо хоча б один метод оплати відповідає вказаному банку."""
+    target = bank_entry["name"]
+    return any(name == target for name, _ in classify_payment_methods(methods))

@@ -48,6 +48,16 @@ python scripts/market.py spread USDT/UAH [--hours N] [--raw]
 python scripts/market.py makers USDT/UAH [--side BUY/SELL] [--top N] [--exchange binance/bybit/both]
 python scripts/market.py latest [--raw]
 python scripts/market.py outliers [--hours N] [--pair USDT/UAH] [--side BUY/SELL]
+python scripts/market.py find USDT/UAH --side BUY [--bank NAME] [--avoid-banks N1,N2] [--min-orders N] [--min-completion N] [--exchange E] [--top N] [--raw]
+```
+
+Примеры полезных запросов find:
+```
+# Безопасные ордера на ПриватБанке:
+python scripts/market.py find USDT/UAH --side BUY --bank Privat --min-orders 500
+
+# Избегать Ощадбанк:
+python scripts/market.py find USDT/UAH --side SELL --avoid-banks Oschad
 ```
 
 ## Полезные пути

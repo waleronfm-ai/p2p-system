@@ -37,18 +37,28 @@
   - scripts/market.py — все команды (summary, chart, spread, latest) по умолчанию работают с очищенными данными, флаг --raw для сырых; в summary добавлена секция "Внутрибиржевой спред (BUY vs SELL)"
   - Новая команда: python scripts/market.py outliers [--hours N] [--pair X/Y] [--side BUY/SELL]
   - Проверено на живой БД: Quentin777111 (USDT/UAH BUY Binance, 42.10) и fast_retrade (USDT/UAH BUY Bybit, 42.00) корректно отфильтровываются
+- **Шаг 2 завершён:** банки + надёжность мейкеров + команда find
+  - core/banks/registry.py — справочник украинских банков (30+ записей): SAFE (ПриватБанк, Монобанк, А-Банк, Raiffeisen, Sense Bank, Izibank), CAUTION (ПУМБ, OTP, Укрсиббанк и др.), AVOID (Ощадбанк); Bybit ID маппинг + Binance text patterns; публичное API: classify_payment_methods, get_worst_risk, find_bank, methods_match_bank
+  - core/utils/maker_trust.py — классификация мейкеров EXPERT ★ (≥500 сд, ≥95%) / NORMAL · (≥50 сд, ≥80%) / NOVICE ! / UNKNOWN ? + значок ⊕ для merchant; функция format_nickname
+  - scripts/market.py latest — добавлены колонка "Банк" с цветной подсветкой по риску и метки надёжности у никнейма мейкера
+  - scripts/market.py makers — добавлены метки надёжности у никнейма
+  - НОВАЯ команда: python scripts/market.py find PAIR --side BUY/SELL [--bank NAME] [--avoid-banks N1,N2] [--min-orders N] [--min-completion N] [--exchange E] [--top N] [--raw]
+  - Реальные кейсы: Relib_Fast_p2 (NOVICE !, Bank Transfer — тройной красный флаг), StasAgapov ⊕ ★ EXPERT с Ощадбанком (надёжный мейкер но опасный банк)
 
 ## На чём остановились
 
-Просмотрщик market.py готов и протестирован. БД содержит тестовые данные (~272 снимка за ~35 мин).
+Шаг 2 полностью завершён. Команда find работает и протестирована на живой БД.
 
-## Следующий шаг — Шаг 2 из плана
+## Следующий шаг — Шаг 3 из плана
 
-Risk-метки банков + надёжность мейкеров:
-- Справочник украинских банков с метками safe / caution / avoid (Ощадбанк → avoid, ПриватБанк/Монобанк → safe и т.д.)
-- Парсинг payment_methods из ордеров, подсветка ордеров в latest по риску банка
-- Метка надёжности мейкеров на базе completion_rate и total_orders
-- Новая команда find для поиска по фильтрам (--bank, --avoid-banks, --min-orders, --min-completion)
+FastAPI бэкенд (превращаем нашу логику в HTTP API):
+- Endpoints: /market/summary, /market/find, /market/outliers, /makers, /orders, /spread
+- Pydantic-схемы для ответов
+- CORS для будущего фронтенда
+- Запуск через uvicorn локально на 127.0.0.1:8000
+- Документация через автоматический /docs (Swagger UI)
+- Без авторизации пока — для локального использования
+- Подготовка к Шагу 4: Web-интерфейс (React, тёмная тема в стиле Bybit)
 
 ## Workflow обновления документации
 
