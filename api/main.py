@@ -1,0 +1,30 @@
+"""FastAPI приложение P2P System."""
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from api.routers import health, info
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+
+
+app = FastAPI(
+    title="P2P System API",
+    description="Мониторинг P2P курсов: Binance + Bybit / USDT + USDC / UAH",
+    version="0.3.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
+app.include_router(health.router, prefix="/api")
+app.include_router(info.router, prefix="/api")
