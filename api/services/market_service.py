@@ -20,6 +20,8 @@ from core.utils.outliers import filter_outliers
 
 from api.schemas import (
     BankInfo,
+    ChartPoint,
+    ChartResponse,
     MakerInfo,
     MarketOrder,
     OutlierMaker,
@@ -370,4 +372,69 @@ def get_outliers(
         total_outliers=total_outliers_all,
         outlier_pct=round(pct, 2),
         makers=makers_out,
+    )
+
+
+def get_chart(
+    pair: str,
+    mode: str,
+    exchange: str,
+    hours: int,
+    raw: bool = False,
+) -> ChartResponse:
+    parts = pair.upper().split("/")
+    if len(parts) != 2:
+        raise ValueError(f"Invalid pair format: {pair!r}. Expected ASSET/FIAT, e.g. USDT/UAH")
+    asset, fiat = parts
+    trade_type = "BUY" if mode.lower() == "buy" else "SELL"
+    cut = _cutoff(hours)
+
+    w = _snap_where(exchange, asset, fiat, trade_type, cut)
+    order_col = Order.price.asc() if trade_type == "BUY" else Order.price.desc()
+
+    with get_session() as session:
+        snaps = session.execute(
+            select(Snapshot.id, Snapshot.collected_at)
+            .where(*w)
+            .order_by(Snapshot.collected_at.asc())
+        ).all()
+
+        if not snaps:
+            return ChartResponse(
+                exchange=exchange, pair=f"{asset}/{fiat}", mode=mode.lower(),
+                hours=hours, points=[], total_points=0,
+            )
+
+        snap_ts_map = {s.id: s.collected_at for s in snaps}
+        snap_ids = list(snap_ts_map)
+
+        all_orders = session.execute(
+            select(Order.snapshot_id, Order.price)
+            .where(Order.snapshot_id.in_(snap_ids))
+            .order_by(Order.snapshot_id, order_col)
+        ).all()
+
+    points: list[ChartPoint] = []
+    for sid, grp in _groupby(all_orders, key=lambda r: r.snapshot_id):
+        rows = list(grp)[:5]
+        if raw:
+            price = float(rows[0].price)
+        else:
+            clean, _ = filter_outliers(rows, trade_type, top_n=5)
+            if not clean:
+                continue
+            price = float(clean[0].price)
+        points.append(ChartPoint(
+            timestamp=snap_ts_map[sid],
+            price=price,
+            snapshot_id=sid,
+        ))
+
+    return ChartResponse(
+        exchange=exchange,
+        pair=f"{asset}/{fiat}",
+        mode=mode.lower(),
+        hours=hours,
+        points=points,
+        total_points=len(points),
     )

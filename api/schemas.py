@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -75,3 +77,46 @@ class OutliersResponse(BaseModel):
     total_outliers: int
     outlier_pct: float
     makers: list[OutlierMaker]
+
+
+class BankListItem(BaseModel):
+    name: str
+    risk: str = Field(..., description="safe / caution / avoid / unknown")
+    bybit_ids: list[str]
+    binance_keys: list[str]
+
+
+class BanksResponse(BaseModel):
+    total: int
+    banks: list[BankListItem]
+
+
+class MakerDetail(BaseModel):
+    """Подробная информация о мейкере."""
+    id: int
+    exchange: str
+    external_id: str
+    nickname: str
+    total_orders: int
+    completion_rate: float
+    is_merchant: bool
+    trust_level: str = Field(..., description="expert / normal / novice / unknown")
+    first_seen: datetime
+    last_seen: datetime
+
+
+class ChartPoint(BaseModel):
+    """Одна точка на графике цены."""
+    timestamp: datetime
+    price: float
+    snapshot_id: int
+
+
+class ChartResponse(BaseModel):
+    """Данные для графика цены."""
+    exchange: str
+    pair: str
+    mode: str
+    hours: int
+    points: list[ChartPoint]
+    total_points: int
