@@ -33,10 +33,12 @@
 - scripts/stop_tracker.ps1 — аварийная остановка по PID
 - data/p2p_backup_20260501_morning.db — бэкап первой ночи сбора (3312 снимков, 66394 ордеров)
 - **Шаг 1 завершён:** фильтр выбросов + внутрибиржевой спред + команда outliers
-  - core/utils/outliers.py — функции median_price, is_outlier, filter_outliers, get_clean_top1 (threshold 2.5%)
+  - core/utils/outliers.py — функции median_price, is_outlier, filter_outliers, get_clean_top1 (threshold 10%)
   - scripts/market.py — все команды (summary, chart, spread, latest) по умолчанию работают с очищенными данными, флаг --raw для сырых; в summary добавлена секция "Внутрибиржевой спред (BUY vs SELL)"
   - Новая команда: python scripts/market.py outliers [--hours N] [--pair X/Y] [--side BUY/SELL]
   - Проверено на живой БД: Quentin777111 (USDT/UAH BUY Binance, 42.10) и fast_retrade (USDT/UAH BUY Bybit, 42.00) корректно отфильтровываются
+  - **12 мая:** фильтр выбросов смягчён с 2.5% до 10% — теперь отрезаются только жёсткие ловушки (USDC 90 UAH), а нормальные ордера (Quentin 42.10 при медиане 43.50 = 3.2%) остаются в данных как часть рынка. Подготовка к веб-приложению, которое должно показывать реальный рынок (как биржа), а не "перечищенные" данные.
+  - **12 мая:** удалены торговые ярлыки scripts/1_BUY_USDT.bat, scripts/2_SELL_USDT.bat и Desktop-ярлыки "1 Купить USDT.lnk", "2 Продать USDT.lnk". Остался только scripts/3_MARKET.bat и "3 Рынок.lnk".
 - **Шаг 2 завершён:** банки + надёжность мейкеров + команда find
   - core/banks/registry.py — справочник украинских банков (30+ записей): SAFE (ПриватБанк, Монобанк, А-Банк, Raiffeisen, Sense Bank, Izibank), CAUTION (ПУМБ, OTP, Укрсиббанк и др.), AVOID (Ощадбанк); Bybit ID маппинг + Binance text patterns; публичное API: classify_payment_methods, get_worst_risk, find_bank, methods_match_bank
   - core/utils/maker_trust.py — классификация мейкеров EXPERT ★ (≥500 сд, ≥95%) / NORMAL · (≥50 сд, ≥80%) / NOVICE ! / UNKNOWN ? + значок ⊕ для merchant; функция format_nickname

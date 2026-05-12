@@ -33,14 +33,14 @@ def median_price(orders: list) -> float:
     return statistics.median(prices)
 
 
-def is_outlier(price: float, median: float, side: str, threshold: float = 0.025) -> bool:
+def is_outlier(price: float, median: float, side: str, threshold: float = 0.10) -> bool:
     """Проверяет, является ли цена выбросом относительно медианы.
 
     Args:
         price: проверяемая цена
         median: медиана по выборке
         side: "BUY" или "SELL"
-        threshold: допустимое отклонение (0.05 = 5%)
+        threshold: допустимое отклонение (0.10 = 10%)
 
     Returns:
         True если цена — выброс
@@ -50,13 +50,13 @@ def is_outlier(price: float, median: float, side: str, threshold: float = 0.025)
         SELL: выброс = цена слишком высокая → ловушка для продавца
 
     Пример:
-        >>> is_outlier(42.1, 43.5, "BUY")   # 3.2% ниже медианы — OK
+        >>> is_outlier(42.1, 43.5, "BUY")   # 3.2% ниже медианы — НЕ выброс
         False
-        >>> is_outlier(41.0, 43.5, "BUY")   # 5.7% ниже медианы — выброс
+        >>> is_outlier(40.0, 43.5, "BUY")   # 8.0% ниже медианы — НЕ выброс
+        False
+        >>> is_outlier(39.0, 43.5, "BUY")   # 10.3% ниже медианы — выброс
         True
-        >>> is_outlier(47.0, 45.3, "SELL")  # 3.8% выше медианы — OK
-        False
-        >>> is_outlier(48.0, 45.3, "SELL")  # 5.96% выше медианы — выброс
+        >>> is_outlier(90.0, 44.0, "SELL")  # 104% выше медианы — выброс
         True
     """
     if median == 0.0:
@@ -72,7 +72,7 @@ def filter_outliers(
     orders: list,
     side: str,
     top_n: int = 5,
-    threshold: float = 0.025,
+    threshold: float = 0.10,
 ) -> tuple[list, list]:
     """Разделяет ордера на чистые и выбросы.
 
@@ -93,9 +93,9 @@ def filter_outliers(
         >>> orders = [SimpleNamespace(price=p) for p in [42.1, 43.5, 43.6, 43.7, 43.8]]
         >>> clean, bad = filter_outliers(orders, "BUY")
         >>> len(bad)
-        1
-        >>> bad[0].price
-        42.1
+        0
+        >>> len(clean)
+        5
     """
     if not orders:
         return [], []
@@ -118,7 +118,7 @@ def filter_outliers(
 def get_clean_top1(
     orders: list,
     side: str,
-    threshold: float = 0.025,
+    threshold: float = 0.10,
 ) -> object | None:
     """Возвращает первый чистый ордер из топ-5.
 
@@ -135,7 +135,7 @@ def get_clean_top1(
         >>> orders = [SimpleNamespace(price=42.1), SimpleNamespace(price=43.5)]
         >>> result = get_clean_top1(orders, "BUY")
         >>> result.price
-        43.5
+        42.1
     """
     clean, _ = filter_outliers(orders, side, top_n=5, threshold=threshold)
     return clean[0] if clean else None

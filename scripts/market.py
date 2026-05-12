@@ -85,7 +85,7 @@ def _clean_series(
     trade_type: str,
     cut: datetime | None = None,
     top_n: int = 5,
-    threshold: float = 0.025,
+    threshold: float = 0.10,
 ) -> list[tuple[datetime, float]]:
     """Bulk-loads top-N orders per snapshot, filters outliers, returns [(ts, clean_top1_price)]."""
     w = _snap_where(exchange, asset, fiat, trade_type, cut)
@@ -863,7 +863,21 @@ def cmd_outliers(args: argparse.Namespace) -> None:
 
 def cmd_find(args: argparse.Namespace) -> None:
     asset, fiat = _parse_pair(args.pair)
-    side: str = args.side.upper()
+
+    mode_arg: str | None = getattr(args, "mode", None)
+    side_arg: str | None = getattr(args, "side", None)
+
+    if mode_arg and side_arg:
+        console.print("[yellow]Предупреждение: заданы и --mode, и --side. Используется --mode.[/yellow]")
+
+    if mode_arg:
+        side = mode_arg.upper()
+    elif side_arg:
+        side = side_arg.upper()
+    else:
+        console.print("[red]Укажи --mode buy/sell или --side BUY/SELL[/red]")
+        sys.exit(1)
+
     raw: bool = getattr(args, "raw", False)
     top_n: int = getattr(args, "top", 10)
     ex_arg: str = getattr(args, "exchange", "both").lower()
@@ -1045,10 +1059,31 @@ def main() -> None:
     p.add_argument("--side", default=None, choices=["BUY", "SELL"],
                    help="Фильтр по стороне")
 
-    p = sub.add_parser("find", help="Поиск ордеров с фильтрами по банку и надёжности")
+    p = sub.add_parser(
+        "find",
+        help="Поиск ордеров с фильтрами по банку и надёжности",
+        epilog=(
+            "Примеры:\n"
+            "  Найти где купить USDT за гривны:\n"
+            "    market.py find USDT/UAH --mode buy --min-orders 1000\n"
+            "\n"
+            "  Найти где продать USDT за гривны:\n"
+            "    market.py find USDT/UAH --mode sell --min-orders 1000\n"
+            "\n"
+            "  Только на Binance, мин. 500 сделок:\n"
+            "    market.py find USDT/UAH --mode buy --min-orders 500 --exchange binance\n"
+            "\n"
+            "Псевдонимы:\n"
+            "  --mode buy  =  --side BUY   (ты покупаешь у мейкера)\n"
+            "  --mode sell =  --side SELL  (ты продаёшь мейкеру)\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.add_argument("pair", help="Пара: USDT/UAH, USDC/UAH …")
-    p.add_argument("--side", required=True, choices=["BUY", "SELL"],
-                   help="Сторона: BUY (покупаем) или SELL (продаём)")
+    p.add_argument("--mode", choices=["buy", "sell"], default=None,
+                   help="Что ты хочешь сделать: buy = купить крипту, sell = продать крипту")
+    p.add_argument("--side", default=None, choices=["BUY", "SELL"],
+                   help="Альтернатива --mode: BUY (покупаем) или SELL (продаём)")
     p.add_argument("--bank", default=None, metavar="NAME",
                    help="Фильтр по банку (частичное имя): Privat, Mono, Oschad …")
     p.add_argument("--avoid-banks", default=None, metavar="N1,N2",
