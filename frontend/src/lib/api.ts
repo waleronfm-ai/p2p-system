@@ -29,6 +29,44 @@ export async function fetchChartData(
   return data
 }
 
+export interface MakerInfo {
+  nickname: string
+  total_orders: number
+  completion_rate: number
+  is_merchant: boolean
+  trust_level: 'expert' | 'normal' | 'novice' | 'unknown'
+}
+
+export interface BankInfo {
+  name: string
+  risk: 'safe' | 'caution' | 'avoid' | 'unknown'
+}
+
+export interface Order {
+  price: number
+  available_amount: number
+  min_amount: number
+  max_amount: number
+  exchange: string
+  pair: string
+  mode: string
+  maker: MakerInfo
+  banks: BankInfo[]
+  is_outlier: boolean
+}
+
+export async function fetchOrders(
+  exchange: string,
+  pair: string,
+  mode: string,
+  top: number,
+): Promise<Order[]> {
+  const { data } = await api.get<Order[]>('/api/market/orders', {
+    params: { exchange, pair, mode, top },
+  })
+  return data
+}
+
 export async function fetchHealth(): Promise<boolean> {
   try {
     const { data } = await api.get('/api/health')

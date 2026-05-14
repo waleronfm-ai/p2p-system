@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { OrdersTable } from './components/OrdersTable'
 import { PriceChart } from './components/PriceChart'
 import { fetchHealth } from './lib/api'
 
@@ -9,11 +10,11 @@ const cardStyle: React.CSSProperties = {
   padding: 20,
 }
 
-const placeholderTitles = ['Ордера', 'История', 'AI-агент']
+const placeholderTitles = ['AI-агент', 'История']
 
 function PlaceholderCard({ title }: { title: string }) {
   return (
-    <div style={cardStyle} className="flex items-center justify-center">
+    <div style={{ ...cardStyle, minHeight: 120 }} className="flex items-center justify-center">
       <span className="text-sm" style={{ color: 'var(--muted)' }}>
         {title}
       </span>
@@ -31,7 +32,7 @@ export default function App() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col px-6 py-4" style={{ background: 'var(--background)' }}>
+    <div className="flex flex-col px-6 py-4" style={{ background: 'var(--background)' }}>
       {/* Header */}
       <header
         className="flex items-center justify-between pb-3 mb-4 border-b"
@@ -46,11 +47,7 @@ export default function App() {
             className="inline-block w-2 h-2 rounded-full"
             style={{
               background:
-                apiOnline === null
-                  ? 'var(--muted)'
-                  : apiOnline
-                  ? 'var(--green)'
-                  : 'var(--red)',
+                apiOnline === null ? 'var(--muted)' : apiOnline ? 'var(--green)' : 'var(--red)',
             }}
           />
           <span style={{ color: apiOnline ? 'var(--green)' : apiOnline === false ? 'var(--red)' : 'var(--muted)' }}>
@@ -59,18 +56,20 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main grid */}
-      <main className="flex-1">
+      {/* Main grid — ячейки не растягиваются, каждая по своему содержимому */}
+      <main>
         <div
-          className="dashboard-grid grid gap-4 h-full"
-          style={{
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gridTemplateRows: 'repeat(2, minmax(340px, auto))',
-          }}
+          className="dashboard-grid grid gap-4 items-start auto-rows-min"
+          style={{ gridTemplateColumns: 'repeat(2, 1fr)', gridAutoRows: 'min-content' }}
         >
-          {/* Chart card — top-left */}
+          {/* Chart — top-left */}
           <div style={cardStyle}>
             <PriceChart />
+          </div>
+
+          {/* Orders — top-right */}
+          <div style={cardStyle}>
+            <OrdersTable />
           </div>
 
           {placeholderTitles.map((title) => (

@@ -56,7 +56,7 @@ export function PriceChart() {
   }))
 
   return (
-    <div className="flex flex-col gap-3 h-full">
+    <div className="flex flex-col gap-3">
       {/* Header */}
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div>
@@ -111,8 +111,8 @@ export function PriceChart() {
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="flex-1 min-h-0" style={{ height: 280 }}>
+      {/* Chart — фиксированная высота, не растягивается */}
+      <div style={{ height: 280, flexShrink: 0 }}>
         {loading && (
           <div className="flex items-center justify-center h-full text-sm" style={{ color: 'var(--muted)' }}>
             Загрузка…
