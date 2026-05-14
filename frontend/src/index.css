@@ -23,3 +23,10 @@ body {
   background-color: var(--background);
   color: var(--text);
 }
+
+@media (max-width: 767px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+  }
+}
