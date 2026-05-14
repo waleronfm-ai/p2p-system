@@ -38,7 +38,7 @@ const BANK_RISK_COLOR: Record<string, string> = {
   unknown: 'var(--muted)',
 }
 
-const cellCls = 'px-2 py-1 text-xs'
+const cellCls = 'px-2 py-0.5 text-xs'
 const headCls = 'px-2 py-1 text-xs font-medium whitespace-nowrap'
 
 export function OrdersTable() {
@@ -126,7 +126,7 @@ export function OrdersTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.slice(0, 8).map((order, i) => {
+            {orders.slice(0, 7).map((order, i) => {
               const badge = TRUST_BADGE[order.maker.trust_level] ?? TRUST_BADGE.unknown
               return (
                 <TableRow key={i} style={{ borderColor: 'var(--border)' }}
