@@ -57,6 +57,12 @@
   - 4В — таблица ордеров с цветной разметкой банков, метками надёжности мейкеров, пагинацией
   - Полировка: выравнивание высот блоков (items-start), отключение автоперевода Chrome (translate="no" + notranslate meta)
   - scripts/start_frontend.bat — запуск Vite dev server (fallback)
+- **Шаг 5 (в работе):** Trade Journal
+  - ✅ 5А — бэкенд: модель Trade (core/database/models.py), 5 endpoints в api/routers/trades.py:
+    POST /api/trades, GET /api/trades (с фильтрами), GET /api/trades/stats, GET /api/trades/{id}, DELETE /api/trades/{id}
+  - ✅ 5Б — фронтенд: TradesHistory (таблица сделок, UTC→Kyiv), AddTradeModal (textarea → парсер → превью → сохранение),
+    binanceParser.ts (парсит текст страницы сделки Binance, конвертирует время Kyiv→UTC)
+  - ⏳ 5В — страница статистики / P&L (ещё не делали)
 
 ## Архитектура проекта
 
@@ -64,22 +70,26 @@
 p2p-system/
 ├── api/                        # FastAPI бэкенд (Шаг 3)
 │   ├── main.py                 # приложение, CORS, подключение роутеров
-│   ├── routers/                # маршруты по доменам
-│   └── schemas/                # Pydantic-модели ответов
+│   ├── routers/                # маршруты: health, info, market, makers, banks, trades
+│   └── schemas/                # Pydantic-модели ответов (incl. TradeCreate, TradeOut, TradeStats)
 ├── core/
 │   ├── banks/registry.py       # справочник банков
-│   ├── database/               # SQLAlchemy: base, models, db_init
+│   ├── database/               # SQLAlchemy: base, models (Maker/Snapshot/Order/Trade), db_init
 │   ├── exchanges/              # binance.py, bybit.py
 │   └── utils/                  # logger, timezone, outliers, maker_trust
 ├── frontend/                   # React фронтенд (Шаг 4)
 │   ├── index.html              # translate="no" — отключён автоперевод Chrome
 │   └── src/
 │       ├── App.tsx             # главный layout, хедер, статус API
-│       ├── lib/api.ts          # axios-клиент, fetchOrders/fetchChartData/fetchHealth
+│       ├── lib/
+│       │   ├── api.ts          # axios-клиент + типы Trade, fetchTrades/createTrade/deleteTrade
+│       │   └── binanceParser.ts # парсер текста страницы сделки Binance → TradeCreate
 │       └── components/
-│           ├── PriceChart.tsx  # график USDT/UAH (Recharts)
-│           ├── OrdersTable.tsx # таблица ордеров с банками и надёжностью
-│           └── ui/             # shadcn/ui компоненты (Table и др.)
+│           ├── PriceChart.tsx      # график USDT/UAH (Recharts)
+│           ├── OrdersTable.tsx     # таблица ордеров с банками и надёжностью
+│           ├── TradesHistory.tsx   # таблица сделок журнала (UTC→Kyiv)
+│           ├── AddTradeModal.tsx   # модалка добавления сделки через буфер обмена
+│           └── ui/                 # shadcn/ui компоненты (Table и др.)
 ├── modules/tracker/            # сборщик (APScheduler)
 ├── scripts/                    # точки входа + .bat-файлы
 ├── config/                     # settings.py, .env
@@ -124,13 +134,13 @@ $env:PYTHONUTF8=1
 | БД | SQLite → PostgreSQL, SQLAlchemy 2.0 | готов |
 | Бэкенд | FastAPI + uvicorn | готов (Шаг 3) |
 | Фронтенд | Vite + React + TypeScript + Tailwind + shadcn | готов (Шаг 4) |
-| Trade Journal | учёт сделок, история P&L | планируется (Шаг 5) |
+| Trade Journal | учёт сделок, история P&L | в работе (Шаг 5, 5А+5Б готовы) |
 | Алерты | Telegram Bot API | планируется (Шаг 6) |
 | AI-агент | Claude API | планируется (Шаги 7А–7В) |
 
 ## Последний коммит
 
-`feee799 Step 4 polish: align card heights, install Playwright MCP`
+`25fcce8 Step 5 part B: TradesHistory + AddTradeModal + Binance parser`
 
 ## Роадмап
 
@@ -138,12 +148,26 @@ $env:PYTHONUTF8=1
 - ✅ Шаг 2 — Банки + надёжность мейкеров + find
 - ✅ Шаг 3 — FastAPI бэкенд
 - ✅ Шаг 4 — Web-интерфейс (живой график + таблица ордеров)
-- 🔜 Шаг 5 — Trade Journal (учёт сделок Валерия)
+- 🔄 Шаг 5 — Trade Journal (5А backend ✅, 5Б frontend ✅, 5В статистика ⏳)
 - ⬜ Шаг 6 — Telegram-алерты (пороговые уведомления по цене/спреду)
 - ⬜ Шаг 7А — AI-Coach базовый (Claude API)
 - ⬜ Шаг 7Б — AI-Аналитик (графики + новости)
 - ⬜ Шаг 7В — AI-Предсказатель с самообучением
 - ⬜ Шаг 8 — Связки (USDT/USDC, межбиржевые)
+
+## Workflow импорта сделок (Trade Journal)
+
+1. Открой страницу сделки на Binance (раздел P2P → История → детали конкретного ордера)
+2. Скопируй блок с деталями: от строки "Номер ордера" до строки "Способ оплаты" (включительно)
+3. На дашборде http://localhost:5173 в блоке **"История"** нажми **"+ Добавить"**
+4. Вставь скопированный текст в поле, нажми **"Распарсить"**
+5. Проверь превью (тип, курс, USDT, UAH, банк, дата в Киевском времени)
+6. Опционально заполни "Контрагент" и "Комментарий"
+7. Нажми **"Сохранить"** — сделка появится в таблице
+
+Парсер понимает оба варианта написания: "КупитьUSDT" и "Купить USDT", "ПродатьUSDT" и "Продать USDT".
+Время со страницы Binance — это Kyiv-время, парсер конвертирует в UTC перед сохранением в БД.
+В таблице история отображается обратно в Kyiv-времени (те же цифры что на бирже).
 
 ## Workflow обновления документации
 

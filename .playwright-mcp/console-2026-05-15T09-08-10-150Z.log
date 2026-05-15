@@ -372,3 +372,10 @@
     at hs.parse (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:83106)
     at https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:123772 @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
 [ 1762282ms] [ERROR] Fri May 15 2026 12:37:32 GMT+0300 (Москва, стандартное время) === Close nc because of: error: AUTHENTICATION_EXPIRED @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[ 2062496ms] [ERROR] Service wss://festream.saasexch.co:8443/nats-fe,wss://festream.saasexch.cc:8443/nats-fe,wss://festream.saasexch.io:8443/nats-fe,wss://festream.saasexch.com:8443/nats-fe exited because of error: NatsError: 'User Authentication Expired'
+    at Rs.toError (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:125771)
+    at Rs.processError (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:126191)
+    at Rs.push (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:127842)
+    at hs.parse (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:83106)
+    at https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:123772 @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[ 2062501ms] [ERROR] Fri May 15 2026 12:42:32 GMT+0300 (Москва, стандартное время) === Close nc because of: error: AUTHENTICATION_EXPIRED @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
