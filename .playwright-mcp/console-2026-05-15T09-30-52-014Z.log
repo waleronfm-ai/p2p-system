@@ -1,0 +1,5 @@
+[     577ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=b4c570c9:14337
+[   38232ms] [ERROR] Each child in a list should have a unique "key" prop.%s%s See https://react.dev/link/warning-keys for more information. 
+
+Check the render method of `AddTradeModal`.  @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=b4c570c9:12936
+[   86914ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=b4c570c9:14337

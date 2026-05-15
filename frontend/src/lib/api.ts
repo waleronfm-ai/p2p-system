@@ -75,3 +75,45 @@ export async function fetchHealth(): Promise<boolean> {
     return false
   }
 }
+
+export interface Trade {
+  id: number
+  exchange: string
+  order_id: string
+  trade_type: string
+  price: number
+  amount_usdt: number
+  amount_uah: number
+  bank: string | null
+  counterparty: string | null
+  note: string | null
+  executed_at: string
+  created_at: string
+}
+
+export interface TradeCreate {
+  exchange: string
+  order_id: string
+  trade_type: string
+  price: number
+  amount_usdt: number
+  amount_uah: number
+  bank?: string | null
+  counterparty?: string | null
+  note?: string | null
+  executed_at: string
+}
+
+export async function fetchTrades(limit = 100, offset = 0): Promise<Trade[]> {
+  const { data } = await api.get<Trade[]>('/api/trades', { params: { limit, offset } })
+  return data
+}
+
+export async function createTrade(payload: TradeCreate): Promise<Trade> {
+  const { data } = await api.post<Trade>('/api/trades', payload)
+  return data
+}
+
+export async function deleteTrade(id: number): Promise<void> {
+  await api.delete(`/api/trades/${id}`)
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { OrdersTable } from './components/OrdersTable'
 import { PriceChart } from './components/PriceChart'
+import { TradesHistory } from './components/TradesHistory'
 import { fetchHealth } from './lib/api'
 
 const cardStyle: React.CSSProperties = {
@@ -10,7 +11,7 @@ const cardStyle: React.CSSProperties = {
   padding: 20,
 }
 
-const placeholderTitles = ['AI-агент', 'История']
+const placeholderTitles = ['AI-агент']
 
 function PlaceholderCard({ title }: { title: string }) {
   return (
@@ -70,6 +71,11 @@ export default function App() {
           {/* Orders — top-right */}
           <div style={cardStyle}>
             <OrdersTable />
+          </div>
+
+          {/* История сделок — bottom-right */}
+          <div style={cardStyle}>
+            <TradesHistory />
           </div>
 
           {placeholderTitles.map((title) => (

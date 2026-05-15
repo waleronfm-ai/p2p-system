@@ -335,3 +335,40 @@
     at hs.parse (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:83106)
     at https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:123772 @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
 [  999364ms] [ERROR] Fri May 15 2026 12:24:49 GMT+0300 (Москва, стандартное время) === Close nc because of: error: AUTHENTICATION_EXPIRED @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[ 1147292ms] [ERROR] Failed to get namespaces for language usage: NotFoundError: Failed to execute 'transaction' on 'IDBDatabase': One of the specified object stores was not found.
+    at https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286844
+    at new Promise (<anonymous>)
+    at P.<anonymous> (https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286809)
+    at l (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58324)
+    at Generator._invoke (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58112)
+    at Generator.next (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58749)
+    at o (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:142336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[ 1147429ms] Uncaught Error: Minified React error #419; visit https://reactjs.org/docs/error-decoder.html?invariant=419 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at <anonymous> (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:85713)
+    at ju (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:86519)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127762)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at gs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115061)
+    at ys (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:114924)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110089)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[ 1162280ms] [ERROR] firebase push subscribe failed Ya: The notification permission was not granted and blocked instead.
+    at Qa (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:258127)
+    at yc (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:262336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[ 1165568ms] [TIMEEND] [IDGM] [IDGM] Loaded remote IdentityGlobalManager: 407.343017578125 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[ 1165575ms] [TIMEEND] [IDGM] ✅ BIDSInterceptor init successful time: 3040.458984375 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[ 1462254ms] [ERROR] Service wss://festream.saasexch.com:8443/nats-fe,wss://festream.saasexch.co:8443/nats-fe,wss://festream.saasexch.cc:8443/nats-fe,wss://festream.saasexch.io:8443/nats-fe exited because of error: NatsError: 'User Authentication Expired'
+    at Rs.toError (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:125771)
+    at Rs.processError (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:126191)
+    at Rs.push (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:127842)
+    at hs.parse (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:83106)
+    at https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:123772 @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[ 1462256ms] [ERROR] Fri May 15 2026 12:32:32 GMT+0300 (Москва, стандартное время) === Close nc because of: error: AUTHENTICATION_EXPIRED @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[ 1762278ms] [ERROR] Service wss://festream.saasexch.io:8443/nats-fe,wss://festream.saasexch.com:8443/nats-fe,wss://festream.saasexch.co:8443/nats-fe,wss://festream.saasexch.cc:8443/nats-fe exited because of error: NatsError: 'User Authentication Expired'
+    at Rs.toError (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:125771)
+    at Rs.processError (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:126191)
+    at Rs.push (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:127842)
+    at hs.parse (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:83106)
+    at https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:123772 @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[ 1762282ms] [ERROR] Fri May 15 2026 12:37:32 GMT+0300 (Москва, стандартное время) === Close nc because of: error: AUTHENTICATION_EXPIRED @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
