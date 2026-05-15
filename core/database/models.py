@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -57,3 +57,24 @@ class Order(Base):
 
     snapshot: Mapped["Snapshot"] = relationship(back_populates="orders")
     maker: Mapped["Maker"] = relationship(back_populates="orders")
+
+
+class Trade(Base):
+    __tablename__ = "trades"
+    __table_args__ = (
+        Index("ix_trades_order_id", "order_id", unique=True),
+        Index("ix_trades_executed_at", "executed_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    exchange: Mapped[str] = mapped_column(String(20), nullable=False, default="binance")
+    order_id: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    trade_type: Mapped[str] = mapped_column(String(10), nullable=False)  # BUY / SELL
+    price: Mapped[float] = mapped_column(Float, nullable=False)
+    amount_usdt: Mapped[float] = mapped_column(Float, nullable=False)
+    amount_uah: Mapped[float] = mapped_column(Float, nullable=False)
+    bank: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    counterparty: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    executed_at: Mapped[datetime] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC))

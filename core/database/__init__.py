@@ -1,5 +1,5 @@
 from .base import Base, engine, get_session
 from .db_init import init_db
-from .models import Maker, Order, Snapshot
+from .models import Maker, Order, Snapshot, Trade
 
-__all__ = ["Base", "engine", "get_session", "init_db", "Maker", "Snapshot", "Order"]
+__all__ = ["Base", "engine", "get_session", "init_db", "Maker", "Snapshot", "Order", "Trade"]

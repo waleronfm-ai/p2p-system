@@ -1,0 +1,337 @@
+[   10261ms] [WARNING] <link rel=preload> must have a valid `as` value @ https://www.binance.com/ru-UA:0
+[   10261ms] [WARNING] <link rel=preload> must have a valid `as` value @ https://www.binance.com/ru-UA:0
+[   10261ms] [WARNING] <link rel=preload> must have a valid `as` value @ https://www.binance.com/ru-UA:0
+[   10261ms] [WARNING] <link rel=preload> must have a valid `as` value @ https://www.binance.com/ru-UA:0
+[   10263ms] [WARNING] <link rel=preload> must have a valid `as` value @ https://www.binance.com/ru-UA:0
+[   10783ms] [WARNING] A preload for 'https://bin.bnbstatic.com/static/images/home/register/google-icon.png' is found, but is not used because the request credentials mode does not match. Consider taking a look at crossorigin attribute. @ https://www.binance.com/ru-UA:14
+[   10783ms] [WARNING] A preload for 'https://bin.bnbstatic.com/static/images/home/register/apple-icon.png' is found, but is not used because the request credentials mode does not match. Consider taking a look at crossorigin attribute. @ https://www.binance.com/ru-UA:14
+[   10783ms] [WARNING] A preload for 'https://bin.bnbstatic.com/image/julia/new-homepage/download-lite-dark-en.png' is found, but is not used because the request credentials mode does not match. Consider taking a look at crossorigin attribute. @ https://www.binance.com/ru-UA:14
+[   11223ms] [WARNING] A preload for 'https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js' is found, but is not used because the request credentials mode does not match. Consider taking a look at crossorigin attribute. @ https://www.binance.com/ru-UA:0
+[   11447ms] [WARNING] A preload for 'https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js' is found, but is not used because the request credentials mode does not match. Consider taking a look at crossorigin attribute. @ https://www.binance.com/ru-UA:0
+[   12525ms] [WARNING] <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes"> @ https://www.binance.com/ru-UA:0
+[   14337ms] [ERROR] Not signed in with the identity provider. @ https://www.binance.com/ru-UA:0
+[   15493ms] [ERROR] Executing inline script violates the following Content Security Policy directive 'script-src 'nonce-60fc2ff9-f921-438d-93c4-c5d72cad92bb' 'self' 'unsafe-inline' blob: bnc: data: https://*.saasexch.cc https://*.saasexch.co https://*.saasexch.com https://*.saasexch.info https://*.saasexch.io https://*.wistia.com https://*.wistia.net https://accounts.binance.com https://accounts.google.com https://accounts.google.com/gsi/client https://api.smartling.com https://apis.google.com/js/api:client.js https://appleid.cdn-apple.com https://bat.bing.com https://bin.bnbstatic.com https://cdn.cookielaw.org https://euob.segreencolumn.com https://geolocation.onetrust.com https://googleads.g.doubleclick.net https://log.bntrace.com https://maps.googleapis.com https://obseu.segreencolumn.com https://optimize.google.com https://privacyportal-bn.my.onetrust.com https://public-1306379396.file.myqcloud.com https://public.bnbstatic.com https://src.litix.io https://static-file-1306379396.file.myqcloud.com https://www.google-analytics.com https://www.google.com https://www.googleadservices.com https://www.googleanalytics.com https://www.googleoptimize.com https://www.googletagmanager.com https://www.gstatic.com'. Note that 'unsafe-inline' is ignored if either a hash or nonce value is present in the source list. The action has been blocked. @ https://www.googletagmanager.com/gtm.js?id=GTM-M86QHGF:1034
+[   15514ms] [WARNING] The resource https://bin.bnbstatic.com/static/images/home/register/apple-icon.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.binance.com/ru-UA:0
+[   15514ms] [WARNING] The resource https://bin.bnbstatic.com/static/fonts/index.min.css was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.binance.com/ru-UA:0
+[   15514ms] [WARNING] The resource https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.binance.com/ru-UA:0
+[   15514ms] [WARNING] The resource https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.binance.com/ru-UA:0
+[   15514ms] [WARNING] The resource https://bin.bnbstatic.com/image/julia/new-homepage/download-lite-light-en.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.binance.com/ru-UA:0
+[   15514ms] [WARNING] The resource https://bin.bnbstatic.com/image/julia/new-homepage/download-lite-dark-en.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.binance.com/ru-UA:0
+[   15514ms] [WARNING] The resource https://bin.bnbstatic.com/static/images/home/register/apple-dark-icon.svg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.binance.com/ru-UA:0
+[   15514ms] [WARNING] The resource https://bin.bnbstatic.com/static/images/home/register/google-icon.png was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ https://www.binance.com/ru-UA:0
+[   16077ms] [ERROR] Loading the image 'https://www.google.com.ua/ads/ga-audiences?v=1&t=sr&slf_rd=1&_r=4&tid=G-3WP50LGEEC&cid=1493436077.1778836106&gtm=45je65d0v889234695z8832196322za20gzb832196322zd832196322&rcb=11&aip=1&dma=0&gcs=G111&gcd=13r3r3r3r5l1&npa=0&frm=0&tag_exp=0~115616986~115938465~115938469&z=375345162' violates the following Content Security Policy directive: "img-src 'self' blob: data: https://*.asterdex.com https://*.astherus.finance https://*.saasexch.cc https://*.saasexch.co https://*.saasexch.com https://*.saasexch.info https://*.saasexch.io https://*.wistia.com https://*.wistia.net https://accounts.google.com https://analytics.twitter.com https://api.smartling.com https://bat.bing.com https://bin.bnbstatic.com https://cdn.cookielaw.org https://embedwistia-a.akamaihd.net https://geolocation.onetrust.com https://googleads.g.doubleclick.net https://obseu.segreencolumn.com https://optimize.google.com https://privacyportal-bn.my.onetrust.com https://public-1259603563.file.myqcloud.com https://public-1306379396.file.myqcloud.com https://public.bnbstatic.com https://public.nftstatic.com https://sensors.binance.cloud https://static-file-1259603563.file.myqcloud.com https://static-file-1306379396.file.myqcloud.com https://t.co https://upload-bnbstatic-com.s3.ap-northeast-1.amazonaws.com https://www.facebook.com https://www.google-analytics.com https://www.google.com https://www.googletagmanager.com". The action has been blocked. @ https://www.binance.com/ru-UA:0
+[   16143ms] [WARNING] A preload for 'https://bin.bnbstatic.com/static/images/home/register/google-icon.png' is found, but is not used because the request credentials mode does not match. Consider taking a look at crossorigin attribute. @ https://www.binance.com/ru-UA:0
+[   16220ms] [WARNING] A preload for 'https://bin.bnbstatic.com/static/images/home/register/apple-icon.png' is found, but is not used because the request credentials mode does not match. Consider taking a look at crossorigin attribute. @ https://www.binance.com/ru-UA:0
+[   17357ms] [TIMEEND] [IDGM] [IDGM] Loaded remote IdentityGlobalManager: 1471.1728515625 ms @ https://bin.bnbstatic.com/static/main.cdc1a633.js:4
+[   17361ms] [TIMEEND] [IDGM] ✅ BIDSInterceptor init successful time: 4704.07421875 ms @ https://bin.bnbstatic.com/static/main.cdc1a633.js:4
+[   18671ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[   21008ms] [ERROR] Language:ru-UA doesn't exist for the geo rule @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[   28905ms] [TIMEEND] [IDGM] [IDGM] Loaded remote IdentityGlobalManager: 234.041015625 ms @ https://bin.bnbstatic.com/static/main.76a601f3.js:4
+[   28909ms] [TIMEEND] [IDGM] ✅ BIDSInterceptor init successful time: 2472.06689453125 ms @ https://bin.bnbstatic.com/static/main.76a601f3.js:4
+[  187143ms] [TIMEEND] [IDGM] [IDGM] Loaded remote IdentityGlobalManager: 408.498046875 ms @ https://bin.bnbstatic.com/static/main.76a601f3.js:4
+[  187147ms] [TIMEEND] [IDGM] ✅ BIDSInterceptor init successful time: 812.02587890625 ms @ https://bin.bnbstatic.com/static/main.76a601f3.js:4
+[  247229ms] Uncaught (in promise) SyntaxError: Expected property name or '}' in JSON at position 2 (line 1 column 3)
+    at jt (https://public.bnbstatic.com/unpkg/monitor/reporter-sdk@4.5.13.js:1:293718)
+    at <anonymous> (https://public.bnbstatic.com/unpkg/monitor/reporter-sdk@4.5.13.js:1:294814)
+    at l (https://public.bnbstatic.com/unpkg/monitor/reporter-sdk@4.5.13.js:1:285709)
+    at <anonymous> (https://public.bnbstatic.com/unpkg/monitor/reporter-sdk@4.5.13.js:1:287065)
+    at <anonymous> (https://public.bnbstatic.com/unpkg/monitor/reporter-sdk@4.5.13.js:1:286072)
+    at bt (https://public.bnbstatic.com/unpkg/monitor/reporter-sdk@4.5.13.js:1:291716)
+    at a (https://public.bnbstatic.com/unpkg/monitor/reporter-sdk@4.5.13.js:1:295138)
+[  256037ms] [LOG] Service worker active @ https://bin.bnbstatic.com/static/sw-load/cache-control-load@0.0.5.js:11
+[  257573ms] [ERROR] Failed to get namespaces for language usage: NotFoundError: Failed to execute 'transaction' on 'IDBDatabase': One of the specified object stores was not found.
+    at https://bin.bnbstatic.com/static/main.7a53dda9.js:81:98417
+    at new Promise (<anonymous>)
+    at H.<anonymous> (https://bin.bnbstatic.com/static/main.7a53dda9.js:81:98383)
+    at l (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58324)
+    at Generator._invoke (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58112)
+    at Generator.next (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58749)
+    at o (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:142336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  258334ms] [TIMEEND] [IDGM] [IDGM] Loaded remote IdentityGlobalManager: 472.844970703125 ms @ https://bin.bnbstatic.com/static/main.7a53dda9.js:0
+[  258334ms] [TIMEEND] [IDGM] ✅ BIDSInterceptor init successful time: 1255.489990234375 ms @ https://bin.bnbstatic.com/static/main.7a53dda9.js:0
+[  259269ms] [ERROR] Error: No QueryClient set, use QueryClientProvider to set one
+    at Tt (https://bin.bnbstatic.com/static/chunks/page-0a6a.a1bd2c6b.js:9:12741)
+    at Lr (https://bin.bnbstatic.com/static/chunks/page-0a6a.a1bd2c6b.js:9:25924)
+    at va (https://bin.bnbstatic.com/static/chunks/page-0a6a.a1bd2c6b.js:9:27222)
+    at Hc (https://bin.bnbstatic.com/static/chunks/page-0a6a.a1bd2c6b.js:241:91980)
+    at Tp (https://bin.bnbstatic.com/static/chunks/page-0a6a.a1bd2c6b.js:241:92163)
+    at Uh (https://bin.bnbstatic.com/static/chunks/page-0a6a.a1bd2c6b.js:253:57555)
+    at my (https://bin.bnbstatic.com/static/chunks/page-0a6a.a1bd2c6b.js:256:30872)
+    at _o (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:69398)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:125882)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:115134)
+    at gs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:115062)
+    at ys (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:114925)
+    at os (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:111760)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:110316)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:136884)
+    at MessagePort.T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:137416) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  259592ms] [ERROR] Failed to load resource: the server responded with a status of 429 () @ https://o529943.ingest.sentry.io/api/4505939916816384/envelope/?sentry_key=e0bde8082e78c8aaa29d026aaa9453c2&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.38.0:0
+[  259625ms] [ERROR] Language:ru-UA doesn't exist for the geo rule @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  261794ms] [ERROR] WebSocket connection to 'wss://fstream.binance.com/swift/market/stream' failed: Error during WebSocket handshake: Unexpected response code: 404 @ https://bin.bnbstatic.com/static/common/5fef5d4d.ef25446f.js:0
+[  261794ms] [ERROR] socket error wss://fstream.binance.com/swift/market/stream Event @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  263984ms] [ERROR] WebSocket connection to 'wss://fstream.binance.com/swift/market/stream' failed: Error during WebSocket handshake: Unexpected response code: 404 @ https://bin.bnbstatic.com/static/common/5fef5d4d.ef25446f.js:0
+[  263984ms] [ERROR] socket error wss://fstream.binance.com/swift/market/stream Event @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  265439ms] [ERROR] Executing inline script violates the following Content Security Policy directive 'script-src 'nonce-73e97c2d-16c2-43b7-b690-dc7fe9a0ae1b' 'self' 'unsafe-inline' blob: bnc: data: https://*.saasexch.cc https://*.saasexch.co https://*.saasexch.com https://*.saasexch.info https://*.saasexch.io https://*.wistia.com https://*.wistia.net https://accounts.binance.com https://accounts.google.com https://accounts.google.com/gsi/client https://api.smartling.com https://apis.google.com/js/api:client.js https://appleid.cdn-apple.com https://bat.bing.com https://bin.bnbstatic.com https://cdn.cookielaw.org https://euob.segreencolumn.com https://geolocation.onetrust.com https://googleads.g.doubleclick.net https://log.bntrace.com https://maps.googleapis.com https://obseu.segreencolumn.com https://optimize.google.com https://privacyportal-bn.my.onetrust.com https://public-1306379396.file.myqcloud.com https://public.bnbstatic.com https://src.litix.io https://static-file-1306379396.file.myqcloud.com https://www.google-analytics.com https://www.google.com https://www.googleadservices.com https://www.googleanalytics.com https://www.googleoptimize.com https://www.googletagmanager.com https://www.gstatic.com'. Note that 'unsafe-inline' is ignored if either a hash or nonce value is present in the source list. The action has been blocked. @ https://www.googletagmanager.com/gtm.js?id=GTM-M86QHGF:1034
+[  265684ms] [ERROR] Loading the image 'https://www.google.com.ua/ads/ga-audiences?v=1&t=sr&slf_rd=1&_r=4&tid=G-3WP50LGEEC&cid=1493436077.1778836106&gtm=45je65d0v889234695z8832196322za20gzb832196322zd832196322&rcb=9&aip=1&dma=0&gcs=G111&gcd=13r3r3r3r5l1&npa=0&frm=0&tag_exp=0~115616985~115938466~115938468&z=266021263' violates the following Content Security Policy directive: "img-src 'self' blob: data: https://*.asterdex.com https://*.astherus.finance https://*.saasexch.cc https://*.saasexch.co https://*.saasexch.com https://*.saasexch.info https://*.saasexch.io https://*.wistia.com https://*.wistia.net https://accounts.google.com https://analytics.twitter.com https://api.smartling.com https://bat.bing.com https://bin.bnbstatic.com https://cdn.cookielaw.org https://embedwistia-a.akamaihd.net https://geolocation.onetrust.com https://googleads.g.doubleclick.net https://obseu.segreencolumn.com https://optimize.google.com https://privacyportal-bn.my.onetrust.com https://public-1259603563.file.myqcloud.com https://public-1306379396.file.myqcloud.com https://public.bnbstatic.com https://public.nftstatic.com https://sensors.binance.cloud https://static-file-1259603563.file.myqcloud.com https://static-file-1306379396.file.myqcloud.com https://t.co https://upload-bnbstatic-com.s3.ap-northeast-1.amazonaws.com https://www.facebook.com https://www.google-analytics.com https://www.google.com https://www.googletagmanager.com". The action has been blocked. @ https://www.binance.com/ru-UA/my/dashboard:0
+[  267607ms] [ERROR] WebSocket connection to 'wss://fstream.binance.com/swift/market/stream' failed: Error during WebSocket handshake: Unexpected response code: 404 @ https://bin.bnbstatic.com/static/common/5fef5d4d.ef25446f.js:0
+[  267608ms] [ERROR] socket error wss://fstream.binance.com/swift/market/stream Event @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  273853ms] Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at sa (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:54905)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127559)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at gs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115061)
+    at ys (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:114924)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110847)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  273854ms] Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at sa (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:54905)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127559)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at gs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115061)
+    at ys (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:114924)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110847)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  273854ms] Uncaught Error: Minified React error #422; visit https://reactjs.org/docs/error-decoder.html?invariant=422 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at <anonymous> (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:85272)
+    at ju (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:86519)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127762)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at gs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115061)
+    at ys (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:114924)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110847)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  275054ms] [ERROR] Language:ru-UA doesn't exist for the geo rule @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  278746ms] [TIMEEND] [IDGM] [IDGM] Loaded remote IdentityGlobalManager: 494.7529296875 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[  278748ms] [TIMEEND] [IDGM] ✅ BIDSInterceptor init successful time: 3529.797119140625 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[  291317ms] [ERROR] firebase push subscribe failed Ya: The notification permission was not granted and dismissed instead. Please retry
+    at Qa (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:258127)
+    at yc (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:262256) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  302736ms] Uncaught Error: Minified React error #419; visit https://reactjs.org/docs/error-decoder.html?invariant=419 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at <anonymous> (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:85713)
+    at ju (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:86519)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127762)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at gs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115061)
+    at ys (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:114924)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110089)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  305979ms] [TIMEEND] [IDGM] [IDGM] Loaded remote IdentityGlobalManager: 233.93115234375 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[  305979ms] [TIMEEND] [IDGM] ✅ BIDSInterceptor init successful time: 2424.986083984375 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[  321306ms] [ERROR] firebase push subscribe failed Ya: The notification permission was not granted and blocked instead.
+    at Qa (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:258127)
+    at yc (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:262336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  345468ms] [ERROR] Failed to get namespaces for language usage: NotFoundError: Failed to execute 'transaction' on 'IDBDatabase': One of the specified object stores was not found.
+    at https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286844
+    at new Promise (<anonymous>)
+    at P.<anonymous> (https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286809)
+    at l (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58324)
+    at Generator._invoke (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58112)
+    at Generator.next (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58749)
+    at o (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:142336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  346005ms] Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at sa (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:54905)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127559)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at bs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115105)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110188)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  346105ms] Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at sa (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:54905)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127559)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at bs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115105)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110188)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  346106ms] Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at sa (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:54905)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127559)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at bs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115105)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110188)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  346106ms] Uncaught Error: Minified React error #422; visit https://reactjs.org/docs/error-decoder.html?invariant=422 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at <anonymous> (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:85272)
+    at ju (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:86519)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127762)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at bs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115105)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110188)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  347792ms] [ERROR] Language:ru-UA doesn't exist for the geo rule @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  351814ms] [TIMEEND] [IDGM] [IDGM] Loaded remote IdentityGlobalManager: 391.6318359375 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[  351818ms] [TIMEEND] [IDGM] ✅ BIDSInterceptor init successful time: 1013.60009765625 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[  356885ms] [ERROR] Failed to get namespaces for language usage: NotFoundError: Failed to execute 'transaction' on 'IDBDatabase': One of the specified object stores was not found.
+    at https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286844
+    at new Promise (<anonymous>)
+    at P.<anonymous> (https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286809)
+    at l (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58324)
+    at Generator._invoke (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58112)
+    at Generator.next (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58749)
+    at o (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:142336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  357283ms] Uncaught Error: Minified React error #419; visit https://reactjs.org/docs/error-decoder.html?invariant=419 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at <anonymous> (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:85713)
+    at ju (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:86519)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127762)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at gs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115061)
+    at ys (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:114924)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110089)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  358439ms] [ERROR] [libs/api] getUserTaskChallengeList failed Failed to fetch @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  358451ms] [ERROR] TypeError: Failed to fetch
+    at https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:2:11233
+    at https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:74797
+    at https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:93537
+    at f (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:166187)
+    at Generator.<anonymous> (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:167508)
+    at Generator.next (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:166612)
+    at hr (https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:90538)
+    at i (https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:90742) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  358451ms] [ERROR] TypeError: Failed to fetch
+    at https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:2:11233
+    at https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:74797
+    at https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:93537
+    at f (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:166187)
+    at Generator.<anonymous> (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:167508)
+    at Generator.next (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:166612)
+    at hr (https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:90538)
+    at i (https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:90742) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  358452ms] [ERROR] TypeError: Failed to fetch
+    at https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:2:11233
+    at https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:74797
+    at https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:93537
+    at f (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:166187)
+    at Generator.<anonymous> (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:167508)
+    at Generator.next (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:166612)
+    at hr (https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:90538)
+    at i (https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:90742) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  358454ms] [ERROR] TypeError: Failed to fetch
+    at https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:2:11233
+    at https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:74797
+    at https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:93537
+    at f (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:166187)
+    at Generator.<anonymous> (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:167508)
+    at Generator.next (https://public.bnbstatic.com/unpkg/common-widget/vendor@1.4.113.min.js:2:166612)
+    at hr (https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:90538)
+    at i (https://public.bnbstatic.com/unpkg/essential/essential@0.3.73.js:2:90742) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  358852ms] [LOG] Service worker active @ https://bin.bnbstatic.com/static/sw-load/cache-control-load@0.0.5.js:11
+[  359500ms] [ERROR] Failed to get namespaces for language usage: NotFoundError: Failed to execute 'transaction' on 'IDBDatabase': One of the specified object stores was not found.
+    at https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286844
+    at new Promise (<anonymous>)
+    at P.<anonymous> (https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286809)
+    at l (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58324)
+    at Generator._invoke (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58112)
+    at Generator.next (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58749)
+    at o (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:142336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  359717ms] Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at sa (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:54905)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127559)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at bs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115105)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110188)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  359718ms] Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at sa (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:54905)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127559)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at bs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115105)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110188)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  359718ms] Uncaught Error: Minified React error #422; visit https://reactjs.org/docs/error-decoder.html?invariant=422 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at <anonymous> (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:85272)
+    at ju (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:86519)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127762)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at bs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115105)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110188)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  365029ms] [LOG] Service worker active @ https://bin.bnbstatic.com/static/sw-load/cache-control-load@0.0.5.js:11
+[  365992ms] [ERROR] Failed to get namespaces for language usage: NotFoundError: Failed to execute 'transaction' on 'IDBDatabase': One of the specified object stores was not found.
+    at https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286844
+    at new Promise (<anonymous>)
+    at P.<anonymous> (https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286809)
+    at l (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58324)
+    at Generator._invoke (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58112)
+    at Generator.next (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58749)
+    at o (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:142336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  366084ms] Uncaught Error: Minified React error #419; visit https://reactjs.org/docs/error-decoder.html?invariant=419 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at <anonymous> (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:85713)
+    at ju (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:86519)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127762)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at gs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115061)
+    at ys (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:114924)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110089)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  380759ms] [ERROR] firebase push subscribe failed Ya: The notification permission was not granted and blocked instead.
+    at Qa (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:258127)
+    at yc (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:262336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  382010ms] [TIMEEND] [IDGM] [IDGM] Loaded remote IdentityGlobalManager: 412.9580078125 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[  382014ms] [TIMEEND] [IDGM] ✅ BIDSInterceptor init successful time: 1050.298095703125 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[  383603ms] [LOG] Service worker active @ https://bin.bnbstatic.com/static/sw-load/cache-control-load@0.0.5.js:11
+[  384475ms] [ERROR] Failed to get namespaces for language usage: NotFoundError: Failed to execute 'transaction' on 'IDBDatabase': One of the specified object stores was not found.
+    at https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286844
+    at new Promise (<anonymous>)
+    at P.<anonymous> (https://bin.bnbstatic.com/static/main.a3ea6746.js:29:286809)
+    at l (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58324)
+    at Generator._invoke (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58112)
+    at Generator.next (https://public.bnbstatic.com/unpkg/themis/themis@0.0.39.js:2:58749)
+    at o (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:2:142336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  384927ms] Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at sa (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:54905)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127559)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at bs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115105)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110188)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  384927ms] Uncaught Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at sa (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:54905)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127559)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at bs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115105)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110188)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  384928ms] Uncaught Error: Minified React error #422; visit https://reactjs.org/docs/error-decoder.html?invariant=422 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at <anonymous> (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:85272)
+    at ju (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:86519)
+    at _i (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:127762)
+    at ws (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115133)
+    at bs (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:115105)
+    at as (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:110188)
+    at S (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:136883)
+    at T (https://public.bnbstatic.com/unpkg/vendor/vendor.umd.0.0.13.production.min.18.2.0.js:1:137415)
+[  390125ms] [TIMEEND] [IDGM] [IDGM] Loaded remote IdentityGlobalManager: 81.970947265625 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[  390130ms] [TIMEEND] [IDGM] ✅ BIDSInterceptor init successful time: 395.885009765625 ms @ https://bin.bnbstatic.com/static/chunks/dynamic-bids-interceptor.e33b2f30.js:0
+[  402637ms] [ERROR] firebase push subscribe failed Ya: The notification permission was not granted and blocked instead.
+    at Qa (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:258127)
+    at yc (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:262336) @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  699395ms] [ERROR] Service wss://festream.saasexch.co:8443/nats-fe,wss://festream.saasexch.cc:8443/nats-fe,wss://festream.saasexch.io:8443/nats-fe,wss://festream.saasexch.com:8443/nats-fe exited because of error: NatsError: 'User Authentication Expired'
+    at Rs.toError (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:125771)
+    at Rs.processError (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:126191)
+    at Rs.push (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:127842)
+    at hs.parse (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:83106)
+    at https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:123772 @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  699398ms] [ERROR] Fri May 15 2026 12:19:49 GMT+0300 (Москва, стандартное время) === Close nc because of: error: AUTHENTICATION_EXPIRED @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  999353ms] [ERROR] Service wss://festream.saasexch.com:8443/nats-fe,wss://festream.saasexch.co:8443/nats-fe,wss://festream.saasexch.cc:8443/nats-fe,wss://festream.saasexch.io:8443/nats-fe exited because of error: NatsError: 'User Authentication Expired'
+    at Rs.toError (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:125771)
+    at Rs.processError (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:126191)
+    at Rs.push (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:127842)
+    at hs.parse (https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:83106)
+    at https://public.bnbstatic.com/unpkg/web-push-odin/web-push-odin-sdk@0.0.29.js:2:123772 @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1
+[  999364ms] [ERROR] Fri May 15 2026 12:24:49 GMT+0300 (Москва, стандартное время) === Close nc because of: error: AUTHENTICATION_EXPIRED @ https://bin.bnbstatic.com/static/runtime/sentry/7.38.0/bundle.es5.min.js:1

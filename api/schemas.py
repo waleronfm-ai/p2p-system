@@ -120,3 +120,50 @@ class ChartResponse(BaseModel):
     hours: int
     points: list[ChartPoint]
     total_points: int
+
+
+# ---------------------------------------------------------------------------
+# Trade Journal
+# ---------------------------------------------------------------------------
+
+class TradeCreate(BaseModel):
+    exchange: str = Field("binance", description="binance / bybit")
+    order_id: str = Field(..., description="Номер ордера с биржи")
+    trade_type: str = Field(..., description="BUY — купил USDT, SELL — продал USDT")
+    price: float = Field(..., gt=0, description="Курс UAH за 1 USDT")
+    amount_usdt: float = Field(..., gt=0, description="Количество USDT")
+    amount_uah: float = Field(..., gt=0, description="Сумма UAH")
+    bank: str | None = Field(None, description="Банк контрагента, например Monobank")
+    counterparty: str | None = Field(None, description="Ник контрагента")
+    note: str | None = Field(None, description="Произвольный комментарий")
+    executed_at: datetime = Field(..., description="Время сделки на бирже (UTC)")
+
+
+class TradeOut(BaseModel):
+    id: int
+    exchange: str
+    order_id: str
+    trade_type: str
+    price: float
+    amount_usdt: float
+    amount_uah: float
+    bank: str | None
+    counterparty: str | None
+    note: str | None
+    executed_at: datetime
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class TradeStats(BaseModel):
+    total_trades: int
+    buy_count: int
+    sell_count: int
+    total_usdt_bought: float
+    total_usdt_sold: float
+    total_uah_spent: float
+    total_uah_received: float
+    avg_buy_price: float | None
+    avg_sell_price: float | None
+    pnl_uah: float = Field(..., description="total_uah_received - total_uah_spent")
