@@ -28,44 +28,127 @@
   - `spread PAIR [--hours N]` — динамика и статистика спреда Binance↔Bybit (BUY+SELL)
   - `makers PAIR [--side] [--top N] [--exchange]` — топ мейкеров по появлениям, avg/best цена
   - `latest` — текущий снимок всех 8 пар, топ-5 ордеров каждой
-- scripts/start_tracker.bat — запуск двойным кликом (открывает новое окно PowerShell)
+- scripts/start_tracker.bat — запуск трекера (fallback, отдельное окно)
 - scripts/start_tracker_background.ps1 — вызывается из .bat, настраивает окружение
 - scripts/stop_tracker.ps1 — аварийная остановка по PID
 - data/p2p_backup_20260501_morning.db — бэкап первой ночи сбора (3312 снимков, 66394 ордеров)
 - **Шаг 1 завершён:** фильтр выбросов + внутрибиржевой спред + команда outliers
   - core/utils/outliers.py — функции median_price, is_outlier, filter_outliers, get_clean_top1 (threshold 10%)
-  - scripts/market.py — все команды (summary, chart, spread, latest) по умолчанию работают с очищенными данными, флаг --raw для сырых; в summary добавлена секция "Внутрибиржевой спред (BUY vs SELL)"
+  - scripts/market.py — все команды по умолчанию работают с очищенными данными, флаг --raw для сырых; в summary секция "Внутрибиржевой спред (BUY vs SELL)"
   - Новая команда: python scripts/market.py outliers [--hours N] [--pair X/Y] [--side BUY/SELL]
-  - Проверено на живой БД: Quentin777111 (USDT/UAH BUY Binance, 42.10) и fast_retrade (USDT/UAH BUY Bybit, 42.00) корректно отфильтровываются
-  - **12 мая:** фильтр выбросов смягчён с 2.5% до 10% — теперь отрезаются только жёсткие ловушки (USDC 90 UAH), а нормальные ордера (Quentin 42.10 при медиане 43.50 = 3.2%) остаются в данных как часть рынка. Подготовка к веб-приложению, которое должно показывать реальный рынок (как биржа), а не "перечищенные" данные.
-  - **12 мая:** удалены торговые ярлыки scripts/1_BUY_USDT.bat, scripts/2_SELL_USDT.bat и Desktop-ярлыки "1 Купить USDT.lnk", "2 Продать USDT.lnk". Остался только scripts/3_MARKET.bat и "3 Рынок.lnk".
+  - Проверено на живой БД: Quentin777111 (42.10) и fast_retrade (42.00) корректно отфильтровываются
+  - 12 мая: фильтр смягчён с 2.5% до 10% — отрезаются только жёсткие ловушки
+  - 12 мая: удалены торговые ярлыки 1_BUY_USDT.bat, 2_SELL_USDT.bat; остался 3_MARKET.bat
 - **Шаг 2 завершён:** банки + надёжность мейкеров + команда find
-  - core/banks/registry.py — справочник украинских банков (30+ записей): SAFE (ПриватБанк, Монобанк, А-Банк, Raiffeisen, Sense Bank, Izibank), CAUTION (ПУМБ, OTP, Укрсиббанк и др.), AVOID (Ощадбанк); Bybit ID маппинг + Binance text patterns; публичное API: classify_payment_methods, get_worst_risk, find_bank, methods_match_bank
-  - core/utils/maker_trust.py — классификация мейкеров EXPERT ★ (≥500 сд, ≥95%) / NORMAL · (≥50 сд, ≥80%) / NOVICE ! / UNKNOWN ? + значок ⊕ для merchant; функция format_nickname
-  - scripts/market.py latest — добавлены колонка "Банк" с цветной подсветкой по риску и метки надёжности у никнейма мейкера
-  - scripts/market.py makers — добавлены метки надёжности у никнейма
+  - core/banks/registry.py — справочник украинских банков (30+ записей): SAFE / CAUTION / AVOID; Bybit ID маппинг + Binance text patterns
+  - core/utils/maker_trust.py — классификация EXPERT ★ / NORMAL · / NOVICE ! / UNKNOWN ? + значок ⊕ для merchant
+  - scripts/market.py latest — колонка "Банк" с цветной подсветкой + метки надёжности у никнейма
   - НОВАЯ команда: python scripts/market.py find PAIR --side BUY/SELL [--bank NAME] [--avoid-banks N1,N2] [--min-orders N] [--min-completion N] [--exchange E] [--top N] [--raw]
-  - Реальные кейсы: Relib_Fast_p2 (NOVICE !, Bank Transfer — тройной красный флаг), StasAgapov ⊕ ★ EXPERT с Ощадбанком (надёжный мейкер но опасный банк)
+- **Шаг 3 завершён:** FastAPI бэкенд
+  - api/ — FastAPI приложение (main.py, routers/, schemas/)
+  - Эндпоинты: GET /api/health, /api/market/orders, /api/market/chart, /api/market/summary, /api/market/makers, /api/market/banks
+  - Pydantic-схемы для всех ответов
+  - CORS настроен (localhost:5173)
+  - scripts/start_api.bat — запуск uvicorn (fallback)
+  - Документация: http://localhost:8000/docs (Swagger UI)
+- **Шаг 4 завершён:** React фронтенд
+  - 4А — каркас Vite + React + TypeScript + Tailwind CSS + shadcn/ui; тёмная тема в стиле Bybit
+  - 4Б — главный layout + живой график USDT/UAH (Recharts, реальные данные из API)
+  - 4В — таблица ордеров с цветной разметкой банков, метками надёжности мейкеров, пагинацией
+  - Полировка: выравнивание высот блоков (items-start), отключение автоперевода Chrome (translate="no" + notranslate meta)
+  - scripts/start_frontend.bat — запуск Vite dev server (fallback)
 
-## На чём остановились
+## Архитектура проекта
 
-Шаг 2 полностью завершён. Команда find работает и протестирована на живой БД.
+```
+p2p-system/
+├── api/                        # FastAPI бэкенд (Шаг 3)
+│   ├── main.py                 # приложение, CORS, подключение роутеров
+│   ├── routers/                # маршруты по доменам
+│   └── schemas/                # Pydantic-модели ответов
+├── core/
+│   ├── banks/registry.py       # справочник банков
+│   ├── database/               # SQLAlchemy: base, models, db_init
+│   ├── exchanges/              # binance.py, bybit.py
+│   └── utils/                  # logger, timezone, outliers, maker_trust
+├── frontend/                   # React фронтенд (Шаг 4)
+│   ├── index.html              # translate="no" — отключён автоперевод Chrome
+│   └── src/
+│       ├── App.tsx             # главный layout, хедер, статус API
+│       ├── lib/api.ts          # axios-клиент, fetchOrders/fetchChartData/fetchHealth
+│       └── components/
+│           ├── PriceChart.tsx  # график USDT/UAH (Recharts)
+│           ├── OrdersTable.tsx # таблица ордеров с банками и надёжностью
+│           └── ui/             # shadcn/ui компоненты (Table и др.)
+├── modules/tracker/            # сборщик (APScheduler)
+├── scripts/                    # точки входа + .bat-файлы
+├── config/                     # settings.py, .env
+├── data/                       # p2p.db
+├── logs/                       # general.log, errors.log
+└── start_all.bat               # ГЛАВНЫЙ ЗАПУСК — все 5 окон сразу
+```
 
-## Следующий шаг — Шаг 3 из плана
+## Workflow — запуск проекта
 
-FastAPI бэкенд (превращаем нашу логику в HTTP API):
-- Endpoints: /market/summary, /market/find, /market/outliers, /makers, /orders, /spread
-- Pydantic-схемы для ответов
-- CORS для будущего фронтенда
-- Запуск через uvicorn локально на 127.0.0.1:8000
-- Документация через автоматический /docs (Swagger UI)
-- Без авторизации пока — для локального использования
-- Подготовка к Шагу 4: Web-интерфейс (React, тёмная тема в стиле Bybit)
+### Основной способ — двойной клик на `start_all.bat` в корне
+Открывает 5 окон PowerShell сразу:
+1. **Tracker** — сборщик данных (APScheduler)
+2. **API** — FastAPI + uvicorn на localhost:8000
+3. **Frontend** — Vite dev server на localhost:5173
+4. **Claude Code** — AI-помощник в терминале
+5. **Workspace** — рабочий терминал для команд
+
+### Fallback — отдельные .bat (если нужно запустить по одному)
+- `scripts/start_tracker.bat` — только трекер
+- `scripts/start_api.bat` — только API
+- `scripts/start_frontend.bat` — только фронтенд
+
+### Команды для анализа данных (в окне Workspace)
+```powershell
+$env:PYTHONUTF8=1
+.\venv\Scripts\python.exe -m scripts.market summary
+.\venv\Scripts\python.exe -m scripts.market latest
+.\venv\Scripts\python.exe -m scripts.market find USDT/UAH --side BUY --bank Monobank
+.\venv\Scripts\python.exe -m scripts.market chart USDT/UAH --hours 24
+```
+
+## Инструменты разработки
+
+- **Playwright MCP** подключён к Claude Code — можно попросить Claude смотреть на браузер в реальном времени. Фраза: _"используй playwright mcp"_ или _"проверь через playwright mcp"_. Умеет: навигация, снимки DOM, JS-eval, клики, скриншоты.
+
+## Стек
+
+| Слой | Технология | Статус |
+|------|-----------|--------|
+| Сборщик | Python + httpx + APScheduler | готов (Шаги 1–2) |
+| БД | SQLite → PostgreSQL, SQLAlchemy 2.0 | готов |
+| Бэкенд | FastAPI + uvicorn | готов (Шаг 3) |
+| Фронтенд | Vite + React + TypeScript + Tailwind + shadcn | готов (Шаг 4) |
+| Trade Journal | учёт сделок, история P&L | планируется (Шаг 5) |
+| Алерты | Telegram Bot API | планируется (Шаг 6) |
+| AI-агент | Claude API | планируется (Шаги 7А–7В) |
+
+## Последний коммит
+
+`feee799 Step 4 polish: align card heights, install Playwright MCP`
+
+## Роадмап
+
+- ✅ Шаг 1 — Фильтр выбросов + спред + outliers
+- ✅ Шаг 2 — Банки + надёжность мейкеров + find
+- ✅ Шаг 3 — FastAPI бэкенд
+- ✅ Шаг 4 — Web-интерфейс (живой график + таблица ордеров)
+- 🔜 Шаг 5 — Trade Journal (учёт сделок Валерия)
+- ⬜ Шаг 6 — Telegram-алерты (пороговые уведомления по цене/спреду)
+- ⬜ Шаг 7А — AI-Coach базовый (Claude API)
+- ⬜ Шаг 7Б — AI-Аналитик (графики + новости)
+- ⬜ Шаг 7В — AI-Предсказатель с самообучением
+- ⬜ Шаг 8 — Связки (USDT/USDC, межбиржевые)
 
 ## Workflow обновления документации
 
 После завершения каждого Шага плана обновляются ОБА файла:
-- PROJECT_CONTEXT.md — в "Что готово" добавить новые компоненты, в "Следующий шаг" вписать следующий из плана
+- PROJECT_CONTEXT.md — в "Что готово" добавить новые компоненты, обновить роадмап
 - CHEATSHEET.md — добавить новые пользовательские команды, убрать устаревшие
 
 ## Известные аномалии в данных
