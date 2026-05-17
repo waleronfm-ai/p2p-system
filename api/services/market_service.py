@@ -236,13 +236,14 @@ def get_orders(
 
     with get_session() as session:
         for exch in exchanges:
-            snap = session.execute(
-                select(Snapshot.id)
+            snap_row = session.execute(
+                select(Snapshot.id, Snapshot.collected_at)
                 .where(*_snap_where(exch, asset, fiat, trade_type))
                 .order_by(Snapshot.collected_at.desc()).limit(1)
-            ).scalar_one_or_none()
-            if snap is None:
+            ).one_or_none()
+            if snap_row is None:
                 continue
+            snap_id, snap_ts = snap_row
 
             order_col = Order.price.asc() if trade_type == "BUY" else Order.price.desc()
             rows = session.execute(
@@ -252,7 +253,7 @@ def get_orders(
                     Order.payment_methods,
                 )
                 .join(Maker, Order.maker_id == Maker.id)
-                .where(Order.snapshot_id == snap)
+                .where(Order.snapshot_id == snap_id)
                 .order_by(order_col)
             ).all()
 
@@ -260,15 +261,15 @@ def get_orders(
                 rows, _ = filter_outliers(rows, trade_type, top_n=len(rows))
 
             for o in rows:
-                collected.append((exch, o))
+                collected.append((exch, snap_ts, o))
 
     results: list[MarketOrder] = []
-    for exch, o in collected:
+    for exch, snap_ts, o in collected:
         if o.total_orders < min_orders:
             continue
         if o.completion_rate < min_completion:
             continue
-        methods = json.loads(o.payment_methods or "[]")
+        methods = [m for m in json.loads(o.payment_methods or "[]") if m is not None]
         if bank_entry and not methods_match_bank(methods, bank_entry):
             continue
         if avoid_entries and any(methods_match_bank(methods, e) for e in avoid_entries):
@@ -284,6 +285,7 @@ def get_orders(
             maker=_build_maker(o.nickname, o.total_orders, o.completion_rate, o.is_merchant),
             banks=_build_banks(methods),
             is_outlier=False,
+            snapshot_at=snap_ts,
         ))
 
     results.sort(key=lambda x: x.price if trade_type == "BUY" else -x.price)

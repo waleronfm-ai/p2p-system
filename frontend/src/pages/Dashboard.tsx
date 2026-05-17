@@ -9,13 +9,11 @@ const cardStyle: React.CSSProperties = {
   padding: 20,
 }
 
-const placeholderTitles = ['AI-агент']
-
-function PlaceholderCard({ title }: { title: string }) {
+function AIAgentCard() {
   return (
     <div style={{ ...cardStyle, minHeight: 120 }} className="flex items-center justify-center">
       <span className="text-sm" style={{ color: 'var(--muted)' }}>
-        {title}
+        AI-агент
       </span>
     </div>
   )
@@ -24,25 +22,24 @@ function PlaceholderCard({ title }: { title: string }) {
 export function Dashboard() {
   return (
     <main>
-      <div
-        className="dashboard-grid grid gap-4 items-start auto-rows-min"
-        style={{ gridTemplateColumns: 'repeat(2, 1fr)', gridAutoRows: 'min-content' }}
-      >
-        <div style={cardStyle}>
-          <PriceChart />
+      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        {/* Левая колонка: График + AI-агент */}
+        <div className="flex flex-col gap-4">
+          <div style={cardStyle}>
+            <PriceChart />
+          </div>
+          <AIAgentCard />
         </div>
 
-        <div style={cardStyle}>
-          <OrdersTable />
+        {/* Правая колонка: Ордера + История */}
+        <div className="flex flex-col gap-4">
+          <div style={cardStyle}>
+            <OrdersTable />
+          </div>
+          <div style={cardStyle}>
+            <TradesHistory />
+          </div>
         </div>
-
-        <div style={cardStyle}>
-          <TradesHistory />
-        </div>
-
-        {placeholderTitles.map((title) => (
-          <PlaceholderCard key={title} title={title} />
-        ))}
       </div>
     </main>
   )

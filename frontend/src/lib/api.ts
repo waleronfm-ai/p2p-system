@@ -53,6 +53,7 @@ export interface Order {
   maker: MakerInfo
   banks: BankInfo[]
   is_outlier: boolean
+  snapshot_at: string
 }
 
 export async function fetchOrders(

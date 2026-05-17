@@ -30,6 +30,7 @@ class MarketOrder(BaseModel):
     maker: MakerInfo
     banks: list[BankInfo] = Field(default_factory=list, description="Банки мейкера")
     is_outlier: bool = Field(default=False, description="Помечен как выброс")
+    snapshot_at: datetime = Field(..., description="Время сбора снапшота трекером (UTC)")
 
 
 class PairSummary(BaseModel):

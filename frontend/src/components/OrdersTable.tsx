@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -40,6 +39,18 @@ const BANK_RISK_COLOR: Record<string, string> = {
 
 const cellCls = 'px-2 py-0.5 text-xs'
 const headCls = 'px-2 py-1 text-xs font-medium whitespace-nowrap'
+
+function toUtcDate(iso: string): Date {
+  return new Date(iso.endsWith('Z') || iso.includes('+') ? iso : iso + 'Z')
+}
+
+function formatKyivTime(iso: string): string {
+  return new Intl.DateTimeFormat('ru-UA', {
+    timeZone: 'Europe/Kyiv',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(toUtcDate(iso))
+}
 
 export function OrdersTable() {
   const [exchange, setExchange] = useState<Exchange>('binance')
@@ -113,10 +124,14 @@ export function OrdersTable() {
         <div className="py-8 text-center text-xs" style={{ color: 'var(--muted)' }}>Нет ордеров</div>
       )}
 
-      {/* Table — без горизонтального скролла */}
+      {/* Scrollable table */}
       {!loading && !error && orders.length > 0 && (
-        <Table>
-          <TableHeader>
+        <div style={{ overflowY: 'auto', maxHeight: 560 }}>
+          <table className="w-full caption-bottom text-sm">
+          <TableHeader
+            className="sticky top-0 z-10"
+            style={{ background: 'var(--surface)' }}
+          >
             <TableRow style={{ borderColor: 'var(--border)' }}>
               {(['Цена', 'Мейкер', 'Объём', 'Лимиты', 'Банки'] as const).map((h) => (
                 <TableHead key={h} className={headCls} style={{ color: 'var(--muted)' }}>
@@ -126,7 +141,7 @@ export function OrdersTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.slice(0, 7).map((order, i) => {
+            {orders.map((order, i) => {
               const badge = TRUST_BADGE[order.maker.trust_level] ?? TRUST_BADGE.unknown
               return (
                 <TableRow key={i} style={{ borderColor: 'var(--border)' }}
@@ -136,6 +151,9 @@ export function OrdersTable() {
                   <TableCell className={`${cellCls} font-semibold tabular-nums whitespace-nowrap`}
                     style={{ color: priceColor }}>
                     {order.price.toFixed(2)}
+                    <div className="text-[10px] font-normal" style={{ color: 'var(--muted)' }}>
+                      {formatKyivTime(order.snapshot_at)}
+                    </div>
                   </TableCell>
 
                   {/* Мейкер */}
@@ -186,7 +204,8 @@ export function OrdersTable() {
               )
             })}
           </TableBody>
-        </Table>
+          </table>
+        </div>
       )}
     </div>
   )
