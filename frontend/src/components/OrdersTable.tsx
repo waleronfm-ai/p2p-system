@@ -133,7 +133,7 @@ export function OrdersTable() {
             style={{ background: 'var(--surface)' }}
           >
             <TableRow style={{ borderColor: 'var(--border)' }}>
-              {(['Цена', 'Мейкер', 'Объём', 'Лимиты', 'Банки'] as const).map((h) => (
+              {(['Цена', 'Мейкер', 'Лимиты', 'Банки'] as const).map((h) => (
                 <TableHead key={h} className={headCls} style={{ color: 'var(--muted)' }}>
                   {h}
                 </TableHead>
@@ -171,13 +171,6 @@ export function OrdersTable() {
                     <div style={{ color: 'var(--muted)' }}>
                       {order.maker.total_orders} сд · {order.maker.completion_rate.toFixed(1)}%
                     </div>
-                  </TableCell>
-
-                  {/* Объём */}
-                  <TableCell className={`${cellCls} tabular-nums whitespace-nowrap`}
-                    style={{ color: 'var(--text)' }}>
-                    {order.available_amount.toFixed(0)}
-                    <span className="ml-0.5" style={{ color: 'var(--muted)' }}>U</span>
                   </TableCell>
 
                   {/* Лимиты */}

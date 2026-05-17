@@ -1,0 +1,24 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: P2P Coach
+        - navigation [ref=e7]:
+          - link "Дашборд" [ref=e8] [cursor=pointer]:
+            - /url: /
+          - link "Статистика" [active] [ref=e9] [cursor=pointer]:
+            - /url: /stats
+      - generic [ref=e12]: API онлайн
+    - main [ref=e322]:
+      - generic [ref=e323]:
+        - generic [ref=e324]:
+          - heading "Статистика" [level=1] [ref=e325]
+          - paragraph [ref=e326]: 30 дней
+        - generic [ref=e327]:
+          - button "7 дней" [ref=e328] [cursor=pointer]
+          - button "30 дней" [ref=e329] [cursor=pointer]
+          - button "Всё время" [ref=e330] [cursor=pointer]
+      - paragraph [ref=e332]:
+        - text: Нет сделок за выбранный период.
+        - text: Добавьте сделки в блоке История.
+  - generic [ref=e321]: 17:06
