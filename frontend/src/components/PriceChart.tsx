@@ -15,6 +15,13 @@ type Mode = 'buy' | 'sell'
 type Hours = 1 | 6 | 24 | 168
 
 const PAIR = 'USDT/UAH'
+const TZ = 'Europe/Kyiv'
+
+// API returns naive UTC datetimes without timezone suffix — append 'Z' so the browser
+// treats them as UTC instead of local time.
+function parseUtc(iso: string): Date {
+  return new Date(iso.endsWith('Z') || iso.includes('+') ? iso : iso + 'Z')
+}
 
 const selectClass =
   'rounded px-2 py-1 text-sm border focus:outline-none focus:ring-1 focus:ring-[var(--accent)]'
@@ -25,10 +32,19 @@ const selectStyle = {
 }
 
 function formatTime(iso: string, hours: Hours): string {
-  const d = new Date(iso)
-  if (hours <= 6) return d.toLocaleTimeString('ru-UA', { hour: '2-digit', minute: '2-digit' })
-  if (hours <= 24) return d.toLocaleTimeString('ru-UA', { hour: '2-digit', minute: '2-digit' })
-  return d.toLocaleDateString('ru-UA', { month: 'short', day: 'numeric' })
+  const d = parseUtc(iso)
+  if (hours <= 24) {
+    return new Intl.DateTimeFormat('ru-UA', {
+      timeZone: TZ,
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d)
+  }
+  return new Intl.DateTimeFormat('ru-UA', {
+    timeZone: TZ,
+    month: 'short',
+    day: 'numeric',
+  }).format(d)
 }
 
 export function PriceChart() {
@@ -36,16 +52,28 @@ export function PriceChart() {
   const [mode, setMode] = useState<Mode>('buy')
   const [hours, setHours] = useState<Hours>(24)
   const [points, setPoints] = useState<ChartPoint[]>([])
-  const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setLoading(true)
+    setInitialized(false)
     setError(null)
-    fetchChartData(exchange, PAIR, mode, hours)
-      .then((res) => setPoints(res.points))
-      .catch(() => setError('Нет данных'))
-      .finally(() => setLoading(false))
+
+    const load = () => {
+      fetchChartData(exchange, PAIR, mode, hours)
+        .then((res) => {
+          setPoints(res.points)
+          setInitialized(true)
+        })
+        .catch(() => {
+          setError('Нет данных')
+          setInitialized(true)
+        })
+    }
+
+    load()
+    const id = setInterval(load, 60_000)
+    return () => clearInterval(id)
   }, [exchange, mode, hours])
 
   const lastPrice = points.length > 0 ? points[points.length - 1].price : null
@@ -68,7 +96,7 @@ export function PriceChart() {
               {lastPrice.toFixed(2)}
             </div>
           )}
-          {lastPrice == null && !loading && (
+          {lastPrice == null && initialized && (
             <div className="text-sm mt-0.5" style={{ color: 'var(--muted)' }}>
               —
             </div>
@@ -111,19 +139,19 @@ export function PriceChart() {
         </div>
       </div>
 
-      {/* Chart — фиксированная высота, не растягивается */}
+      {/* Chart */}
       <div style={{ height: 280, flexShrink: 0 }}>
-        {loading && (
+        {!initialized && (
           <div className="flex items-center justify-center h-full text-sm" style={{ color: 'var(--muted)' }}>
             Загрузка…
           </div>
         )}
-        {error && !loading && (
+        {initialized && error && (
           <div className="flex items-center justify-center h-full text-sm" style={{ color: 'var(--red)' }}>
             {error}
           </div>
         )}
-        {!loading && !error && chartData.length > 0 && (
+        {initialized && !error && chartData.length > 0 && (
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" />
@@ -164,7 +192,7 @@ export function PriceChart() {
             </LineChart>
           </ResponsiveContainer>
         )}
-        {!loading && !error && chartData.length === 0 && (
+        {initialized && !error && chartData.length === 0 && (
           <div className="flex items-center justify-center h-full text-sm" style={{ color: 'var(--muted)' }}>
             Нет данных за выбранный период
           </div>

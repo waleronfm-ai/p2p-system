@@ -117,3 +117,24 @@ export async function createTrade(payload: TradeCreate): Promise<Trade> {
 export async function deleteTrade(id: number): Promise<void> {
   await api.delete(`/api/trades/${id}`)
 }
+
+export interface TradeStats {
+  total_trades: number
+  buy_count: number
+  sell_count: number
+  total_usdt_bought: number
+  total_usdt_sold: number
+  total_uah_spent: number
+  total_uah_received: number
+  avg_buy_price: number | null
+  avg_sell_price: number | null
+  pnl_uah: number
+}
+
+export async function fetchTradeStats(from_dt?: string, to_dt?: string): Promise<TradeStats> {
+  const params: Record<string, string> = {}
+  if (from_dt) params.from_dt = from_dt
+  if (to_dt) params.to_dt = to_dt
+  const { data } = await api.get<TradeStats>('/api/trades/stats', { params })
+  return data
+}

@@ -62,7 +62,8 @@
     POST /api/trades, GET /api/trades (с фильтрами), GET /api/trades/stats, GET /api/trades/{id}, DELETE /api/trades/{id}
   - ✅ 5Б — фронтенд: TradesHistory (таблица сделок, UTC→Kyiv), AddTradeModal (textarea → парсер → превью → сохранение),
     binanceParser.ts (парсит текст страницы сделки Binance, конвертирует время Kyiv→UTC)
-  - ⏳ 5В — страница статистики / P&L (ещё не делали)
+  - ✅ 5В — страница статистики: react-router-dom, Header с NavLink, pages/Dashboard, pages/Statistics
+    Статистика: селектор периода (7д/30д/всё время), карточка P&L, сетка 4 метрик, заглушка при 0 сделок
 
 ## Архитектура проекта
 
@@ -80,11 +81,15 @@ p2p-system/
 ├── frontend/                   # React фронтенд (Шаг 4)
 │   ├── index.html              # translate="no" — отключён автоперевод Chrome
 │   └── src/
-│       ├── App.tsx             # главный layout, хедер, статус API
+│       ├── App.tsx             # BrowserRouter + Routes (/, /stats) + Header
 │       ├── lib/
-│       │   ├── api.ts          # axios-клиент + типы Trade, fetchTrades/createTrade/deleteTrade
+│       │   ├── api.ts          # axios-клиент + типы Trade/TradeStats, fetchTrades/createTrade/deleteTrade/fetchTradeStats
 │       │   └── binanceParser.ts # парсер текста страницы сделки Binance → TradeCreate
+│       ├── pages/
+│       │   ├── Dashboard.tsx   # дашборд (график + ордера + история + AI-заглушка)
+│       │   └── Statistics.tsx  # статистика: P&L + 4 метрики + селектор периода
 │       └── components/
+│           ├── Header.tsx          # общий хедер: лого + NavLink навигация + API-индикатор
 │           ├── PriceChart.tsx      # график USDT/UAH (Recharts)
 │           ├── OrdersTable.tsx     # таблица ордеров с банками и надёжностью
 │           ├── TradesHistory.tsx   # таблица сделок журнала (UTC→Kyiv)
@@ -134,7 +139,7 @@ $env:PYTHONUTF8=1
 | БД | SQLite → PostgreSQL, SQLAlchemy 2.0 | готов |
 | Бэкенд | FastAPI + uvicorn | готов (Шаг 3) |
 | Фронтенд | Vite + React + TypeScript + Tailwind + shadcn | готов (Шаг 4) |
-| Trade Journal | учёт сделок, история P&L | в работе (Шаг 5, 5А+5Б готовы) |
+| Trade Journal | учёт сделок, история P&L, статистика | готов (Шаг 5 полностью) |
 | Алерты | Telegram Bot API | планируется (Шаг 6) |
 | AI-агент | Claude API | планируется (Шаги 7А–7В) |
 
@@ -148,7 +153,7 @@ $env:PYTHONUTF8=1
 - ✅ Шаг 2 — Банки + надёжность мейкеров + find
 - ✅ Шаг 3 — FastAPI бэкенд
 - ✅ Шаг 4 — Web-интерфейс (живой график + таблица ордеров)
-- 🔄 Шаг 5 — Trade Journal (5А backend ✅, 5Б frontend ✅, 5В статистика ⏳)
+- ✅ Шаг 5 — Trade Journal (5А backend, 5Б frontend, 5В статистика — всё готово)
 - ⬜ Шаг 6 — Telegram-алерты (пороговые уведомления по цене/спреду)
 - ⬜ Шаг 7А — AI-Coach базовый (Claude API)
 - ⬜ Шаг 7Б — AI-Аналитик (графики + новости)

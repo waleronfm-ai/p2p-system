@@ -1,0 +1,189 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: P2P Coach
+        - navigation [ref=e7]:
+          - link "Дашборд" [active] [ref=e8] [cursor=pointer]:
+            - /url: /
+          - link "Статистика" [ref=e9] [cursor=pointer]:
+            - /url: /stats
+      - generic [ref=e12]: API онлайн
+    - main [ref=e251]:
+      - generic [ref=e252]:
+        - generic [ref=e254]:
+          - generic [ref=e255]:
+            - generic [ref=e256]:
+              - generic [ref=e257]: USDT / UAH
+              - generic [ref=e258]: "43.83"
+            - generic [ref=e259]:
+              - combobox [ref=e260]:
+                - option "Binance" [selected]
+                - option "Bybit"
+              - combobox [ref=e261]:
+                - option "Купить USDT" [selected]
+                - option "Продать USDT"
+              - combobox [ref=e262]:
+                - option "1ч"
+                - option "6ч"
+                - option "24ч" [selected]
+                - option "7д"
+          - application [ref=e266]:
+            - generic [ref=e275]:
+              - generic [ref=e276]:
+                - generic [ref=e278]: 13:20
+                - generic [ref=e280]: 13:22
+                - generic [ref=e282]: 13:23
+                - generic [ref=e284]: 13:24
+                - generic [ref=e286]: 13:25
+                - generic [ref=e288]: 13:26
+                - generic [ref=e290]: 13:27
+                - generic [ref=e292]: 13:28
+                - generic [ref=e294]: 13:29
+                - generic [ref=e296]: 13:31
+                - generic [ref=e298]: 13:32
+                - generic [ref=e300]: 13:33
+                - generic [ref=e302]: 13:34
+                - generic [ref=e304]: 13:35
+                - generic [ref=e306]: 13:35
+                - generic [ref=e308]: 13:37
+                - generic [ref=e310]: 13:39
+                - generic [ref=e312]: 13:40
+                - generic [ref=e314]: 13:41
+                - generic [ref=e316]: 13:42
+              - generic [ref=e317]:
+                - generic [ref=e319]: "40.8"
+                - generic [ref=e321]: "41.6"
+                - generic [ref=e323]: "42.4"
+                - generic [ref=e325]: "43.2"
+                - generic [ref=e327]: "44.0"
+        - generic [ref=e329]:
+          - generic [ref=e330]:
+            - generic [ref=e331]: Ордера
+            - generic [ref=e332]:
+              - combobox [ref=e333]:
+                - option "Binance" [selected]
+                - option "Bybit"
+              - combobox [ref=e334]:
+                - option "Купить" [selected]
+                - option "Продать"
+              - combobox [ref=e335]:
+                - option "10"
+                - option "15" [selected]
+                - option "25"
+                - option "50"
+          - table [ref=e337]:
+            - rowgroup [ref=e338]:
+              - row "Цена Мейкер Объём Лимиты Банки" [ref=e339]:
+                - columnheader "Цена" [ref=e340]
+                - columnheader "Мейкер" [ref=e341]
+                - columnheader "Объём" [ref=e342]
+                - columnheader "Лимиты" [ref=e343]
+                - columnheader "Банки" [ref=e344]
+            - rowgroup [ref=e345]:
+              - row "43.83 · marmeladka_p2p 248 сд · 100.0% 50U 1538–1538 Монобанк, Влас. рахунок" [ref=e346]:
+                - cell "43.83" [ref=e347]
+                - cell "· marmeladka_p2p 248 сд · 100.0%" [ref=e348]:
+                  - generic [ref=e349]:
+                    - generic [ref=e350]: ·
+                    - generic "marmeladka_p2p" [ref=e351]
+                  - generic [ref=e352]: 248 сд · 100.0%
+                - cell "50U" [ref=e353]
+                - cell "1538–1538" [ref=e354]
+                - cell "Монобанк, Влас. рахунок" [ref=e355]:
+                  - generic [ref=e356]: Монобанк
+                  - generic [ref=e357]: ", Влас. рахунок"
+              - row "43.84 ! Crypto-fast 6 сд · 100.0% 275U 12 020–12 030 Монобанк" [ref=e358]:
+                - cell "43.84" [ref=e359]
+                - cell "! Crypto-fast 6 сд · 100.0%" [ref=e360]:
+                  - generic [ref=e361]:
+                    - generic [ref=e362]: "!"
+                    - generic "Crypto-fast" [ref=e363]
+                  - generic [ref=e364]: 6 сд · 100.0%
+                - cell "275U" [ref=e365]
+                - cell "12 020–12 030" [ref=e366]
+                - cell "Монобанк" [ref=e367]:
+                  - generic [ref=e368]: Монобанк
+              - row "43.86 ★ 140dnk 3688 сд · 99.9% 151U 865–865 А-Банк, Влас. рахунок, Монобанк" [ref=e369]:
+                - cell "43.86" [ref=e370]
+                - cell "★ 140dnk 3688 сд · 99.9%" [ref=e371]:
+                  - generic [ref=e372]:
+                    - generic [ref=e373]: ★
+                    - generic "140dnk" [ref=e374]
+                  - generic [ref=e375]: 3688 сд · 99.9%
+                - cell "151U" [ref=e376]
+                - cell "865–865" [ref=e377]
+                - cell "А-Банк, Влас. рахунок, Монобанк" [ref=e378]:
+                  - generic [ref=e379]: А-Банк
+                  - generic [ref=e380]: ", Влас. рахунок"
+                  - generic [ref=e381]: ", Монобанк"
+              - row "43.87 ★ Vladislav 2003 сд · 99.4% 100U 570–570 Монобанк" [ref=e382]:
+                - cell "43.87" [ref=e383]
+                - cell "★ Vladislav 2003 сд · 99.4%" [ref=e384]:
+                  - generic [ref=e385]:
+                    - generic [ref=e386]: ★
+                    - generic "Vladislav" [ref=e387]
+                  - generic [ref=e388]: 2003 сд · 99.4%
+                - cell "100U" [ref=e389]
+                - cell "570–570" [ref=e390]
+                - cell "Монобанк" [ref=e391]:
+                  - generic [ref=e392]: Монобанк
+              - row "43.89 ★ p2p_exxxchange 1777 сд · 100.0% 329U 1912–1912 Монобанк, Влас. рахунок" [ref=e393]:
+                - cell "43.89" [ref=e394]
+                - cell "★ p2p_exxxchange 1777 сд · 100.0%" [ref=e395]:
+                  - generic [ref=e396]:
+                    - generic [ref=e397]: ★
+                    - generic "p2p_exxxchange" [ref=e398]
+                  - generic [ref=e399]: 1777 сд · 100.0%
+                - cell "329U" [ref=e400]
+                - cell "1912–1912" [ref=e401]
+                - cell "Монобанк, Влас. рахунок" [ref=e402]:
+                  - generic [ref=e403]: Монобанк
+                  - generic [ref=e404]: ", Влас. рахунок"
+              - row "43.94 ★ _kov_21 1589 сд · 100.0% 66U 1499–1500 Монобанк, Влас. рахунок, А-Банк" [ref=e405]:
+                - cell "43.94" [ref=e406]
+                - cell "★ _kov_21 1589 сд · 100.0%" [ref=e407]:
+                  - generic [ref=e408]:
+                    - generic [ref=e409]: ★
+                    - generic "_kov_21" [ref=e410]
+                  - generic [ref=e411]: 1589 сд · 100.0%
+                - cell "66U" [ref=e412]
+                - cell "1499–1500" [ref=e413]
+                - cell "Монобанк, Влас. рахунок, А-Банк" [ref=e414]:
+                  - generic [ref=e415]: Монобанк
+                  - generic [ref=e416]: ", Влас. рахунок"
+                  - generic [ref=e417]: ", А-Банк"
+              - row "43.95 ! Romanovich_p2p 1 сд · 100.0% 151U 6600–6620 Ukreximbank, Raiffeisen Bank Aval, Влас. рахунок" [ref=e418]:
+                - cell "43.95" [ref=e419]
+                - cell "! Romanovich_p2p 1 сд · 100.0%" [ref=e420]:
+                  - generic [ref=e421]:
+                    - generic [ref=e422]: "!"
+                    - generic "Romanovich_p2p" [ref=e423]
+                  - generic [ref=e424]: 1 сд · 100.0%
+                - cell "151U" [ref=e425]
+                - cell "6600–6620" [ref=e426]
+                - cell "Ukreximbank, Raiffeisen Bank Aval, Влас. рахунок" [ref=e427]:
+                  - generic [ref=e428]: Ukreximbank
+                  - generic [ref=e429]: ", Raiffeisen Bank Aval"
+                  - generic [ref=e430]: ", Влас. рахунок"
+        - generic [ref=e432]:
+          - generic [ref=e433]:
+            - generic [ref=e434]: История
+            - button "+ Добавить" [ref=e435] [cursor=pointer]
+          - table [ref=e437]:
+            - rowgroup [ref=e438]:
+              - row "Дата Тип Курс USDT Банк" [ref=e439]:
+                - columnheader "Дата" [ref=e440]
+                - columnheader "Тип" [ref=e441]
+                - columnheader "Курс" [ref=e442]
+                - columnheader "USDT" [ref=e443]
+                - columnheader "Банк" [ref=e444]
+            - rowgroup [ref=e445]:
+              - row "11.03 18:05 SELL 43.66 86.75 Monobank (Card)" [ref=e446]:
+                - cell "11.03 18:05" [ref=e447]
+                - cell "SELL" [ref=e448]
+                - cell "43.66" [ref=e449]
+                - cell "86.75" [ref=e450]
+                - cell "Monobank (Card)" [ref=e451]
+        - generic [ref=e453]: AI-агент
+  - generic [ref=e219]: "40.8"
