@@ -168,3 +168,13 @@ class TradeStats(BaseModel):
     avg_buy_price: float | None
     avg_sell_price: float | None
     pnl_uah: float = Field(..., description="total_uah_received - total_uah_spent")
+
+
+class PositionResponse(BaseModel):
+    usdt_balance: float = Field(..., description="Текущий остаток USDT (BUY - SELL)")
+    avg_buy_price: float | None = Field(None, description="Средневзвешенная цена покупки (UAH за USDT)")
+    break_even: float | None = Field(None, description="Точка безубыточности (= avg_buy_price)")
+    realized_profit_uah: float | None = Field(None, description="Реализованная прибыль UAH по всем продажам")
+    total_trades: int
+    buy_count: int
+    sell_count: int
