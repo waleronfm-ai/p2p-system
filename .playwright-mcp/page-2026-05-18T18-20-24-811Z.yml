@@ -1,0 +1,34 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: P2P Coach
+      - navigation [ref=e7]:
+        - link "Дашборд" [ref=e8] [cursor=pointer]:
+          - /url: /
+        - link "Статистика" [ref=e9] [cursor=pointer]:
+          - /url: /stats
+    - generic [ref=e12]: Проверка…
+  - main [ref=e13]:
+    - generic [ref=e14]: Загрузка позиции…
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - generic [ref=e19]: USDT / UAH
+        - generic [ref=e20]:
+          - combobox [ref=e21]:
+            - option "Binance" [selected]
+            - option "Bybit"
+          - combobox [ref=e22]:
+            - option "Купить USDT" [selected]
+            - option "Продать USDT"
+          - combobox [ref=e23]:
+            - option "1ч"
+            - option "6ч"
+            - option "24ч" [selected]
+            - option "7д"
+      - generic [ref=e25]: Загрузка…
+    - generic [ref=e27]: AI-агент скоро появится
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]: История
+        - button "+ Добавить" [ref=e32] [cursor=pointer]
+      - generic [ref=e33]: Загрузка…

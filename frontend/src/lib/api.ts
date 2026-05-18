@@ -139,3 +139,18 @@ export async function fetchTradeStats(from_dt?: string, to_dt?: string): Promise
   const { data } = await api.get<TradeStats>('/api/trades/stats', { params })
   return data
 }
+
+export interface Position {
+  usdt_balance: number
+  avg_buy_price: number | null
+  break_even: number | null
+  realized_profit_uah: number | null
+  total_trades: number
+  buy_count: number
+  sell_count: number
+}
+
+export async function fetchPosition(): Promise<Position> {
+  const { data } = await api.get<Position>('/api/position')
+  return data
+}

@@ -1,3 +1,4 @@
+import { PositionBar } from '../components/PositionBar'
 import { PriceChart } from '../components/PriceChart'
 import { TradesHistory } from '../components/TradesHistory'
 
@@ -23,6 +24,8 @@ function AIAgentCard() {
 export function Dashboard() {
   return (
     <main className="flex flex-col gap-4">
+      <PositionBar />
+
       <div style={cardStyle}>
         <PriceChart />
       </div>
