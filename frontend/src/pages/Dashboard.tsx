@@ -1,4 +1,3 @@
-import { OrdersTable } from '../components/OrdersTable'
 import { PriceChart } from '../components/PriceChart'
 import { TradesHistory } from '../components/TradesHistory'
 
@@ -11,9 +10,11 @@ const cardStyle: React.CSSProperties = {
 
 function AIAgentCard() {
   return (
-    <div style={{ ...cardStyle, minHeight: 120 }} className="flex items-center justify-center">
+    <div
+      style={{ ...cardStyle, minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+    >
       <span className="text-sm" style={{ color: 'var(--muted)' }}>
-        AI-агент
+        AI-агент скоро появится
       </span>
     </div>
   )
@@ -21,25 +22,15 @@ function AIAgentCard() {
 
 export function Dashboard() {
   return (
-    <main>
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        {/* Левая колонка: График + AI-агент */}
-        <div className="flex flex-col gap-4">
-          <div style={cardStyle}>
-            <PriceChart />
-          </div>
-          <AIAgentCard />
-        </div>
+    <main className="flex flex-col gap-4">
+      <div style={cardStyle}>
+        <PriceChart />
+      </div>
 
-        {/* Правая колонка: Ордера + История */}
-        <div className="flex flex-col gap-4">
-          <div style={cardStyle}>
-            <OrdersTable />
-          </div>
-          <div style={cardStyle}>
-            <TradesHistory />
-          </div>
-        </div>
+      <AIAgentCard />
+
+      <div style={cardStyle}>
+        <TradesHistory />
       </div>
     </main>
   )
