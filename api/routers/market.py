@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
 
-from api.schemas import ChartResponse, MarketOrder, OutliersResponse, SummaryResponse
-from api.services.market_service import get_chart, get_orders, get_outliers, get_summary
+from api.schemas import ChartResponse, MarketOrder, OpportunitiesResponse, OutliersResponse, SummaryResponse
+from api.services.market_service import get_chart, get_opportunities, get_orders, get_outliers, get_summary
 
 router = APIRouter(prefix="/market")
 
@@ -57,6 +57,22 @@ def chart(
         raise HTTPException(422, detail="exchange must be 'binance' or 'bybit'")
     try:
         return get_chart(pair=pair, mode=mode, exchange=exchange, hours=hours, raw=raw)
+    except ValueError as exc:
+        raise HTTPException(422, detail=str(exc))
+
+
+@router.get("/opportunities", response_model=OpportunitiesResponse, summary="Выгодные ордера с учётом позиции")
+def opportunities(
+    exchange: str = Query("binance", description="binance или bybit"),
+    pair: str = Query("USDT/UAH", description="Пара: USDT/UAH, USDC/UAH"),
+    mode: str | None = Query(None, description="entry / exit / null (авто по позиции)"),
+):
+    if mode is not None and mode not in ("entry", "exit"):
+        raise HTTPException(422, detail="mode must be 'entry', 'exit' or omitted")
+    if exchange not in ("binance", "bybit"):
+        raise HTTPException(422, detail="exchange must be 'binance' or 'bybit'")
+    try:
+        return get_opportunities(exchange=exchange, pair=pair, mode=mode)
     except ValueError as exc:
         raise HTTPException(422, detail=str(exc))
 

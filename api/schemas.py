@@ -178,3 +178,27 @@ class PositionResponse(BaseModel):
     total_trades: int
     buy_count: int
     sell_count: int
+
+
+# ---------------------------------------------------------------------------
+# Opportunities (Шаг 7А)
+# ---------------------------------------------------------------------------
+
+class OpportunityItem(BaseModel):
+    price: float
+    available_amount: float
+    min_amount: float
+    max_amount: float
+    exchange: str
+    pair: str
+    profit_per_usdt: float = Field(..., description="Прибыль/экономия за 1 USDT: exit = price - break_even, entry = reference - price")
+    maker: MakerInfo
+    banks: list[BankInfo]
+    snapshot_at: datetime
+
+
+class OpportunitiesResponse(BaseModel):
+    mode: str = Field(..., description="entry или exit")
+    reference_price: float = Field(..., description="Опорная цена: медиана топ-5 для entry, break_even для exit")
+    threshold_price: float = Field(..., description="Пороговая цена: entry — reference*(1 - discount%), exit — break_even + target_profit")
+    opportunities: list[OpportunityItem]

@@ -6,16 +6,18 @@ from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 from itertools import groupby as _groupby
 
+from fastapi import HTTPException
 from sqlalchemy import func, select
 
 from core.banks.registry import (
+    RiskLevel,
     classify_payment_methods,
     find_bank,
     get_worst_risk,
     methods_match_bank,
 )
-from core.database import Maker, Order, Snapshot, get_session
-from core.utils.maker_trust import classify_maker
+from core.database import Maker, Order, Snapshot, Trade, get_session
+from core.utils.maker_trust import TrustLevel, classify_maker
 from core.utils.outliers import filter_outliers
 
 from api.schemas import (
@@ -24,12 +26,27 @@ from api.schemas import (
     ChartResponse,
     MakerInfo,
     MarketOrder,
+    OpportunityItem,
+    OpportunitiesResponse,
     OutlierMaker,
     OutliersResponse,
     PairSummary,
     SpreadInfo,
     SummaryResponse,
 )
+
+# ── Opportunities constants ───────────────────────────────────────────────────
+_TARGET_PROFIT_PER_USDT = 0.3
+_ENTRY_DISCOUNT_PERCENT = 0.3
+_MIN_MAKER_TRUST = TrustLevel.NORMAL
+_ONLY_SAFE_BANKS = True
+
+_TRUST_PRIORITY = {
+    TrustLevel.EXPERT:  3,
+    TrustLevel.NORMAL:  2,
+    TrustLevel.NOVICE:  1,
+    TrustLevel.UNKNOWN: 0,
+}
 
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
@@ -439,4 +456,124 @@ def get_chart(
         hours=hours,
         points=points,
         total_points=len(points),
+    )
+
+
+def _load_position() -> tuple[float, float | None]:
+    """Возвращает (usdt_balance, break_even) из таблицы Trade."""
+    with get_session() as session:
+        trades = session.scalars(select(Trade)).all()
+    buys = [t for t in trades if t.trade_type == "BUY"]
+    sells = [t for t in trades if t.trade_type == "SELL"]
+    total_buy_usdt = sum(t.amount_usdt for t in buys)
+    total_buy_uah = sum(t.amount_uah for t in buys)
+    total_sell_usdt = sum(t.amount_usdt for t in sells)
+    usdt_balance = total_buy_usdt - total_sell_usdt
+    break_even = (total_buy_uah / total_buy_usdt) if total_buy_usdt > 0 else None
+    return usdt_balance, break_even
+
+
+def _passes_trust(total_orders: int, completion_rate: float) -> bool:
+    return _TRUST_PRIORITY.get(classify_maker(total_orders, completion_rate), 0) >= _TRUST_PRIORITY[_MIN_MAKER_TRUST]
+
+
+def _all_safe_banks(methods: list[str]) -> bool:
+    classified = classify_payment_methods(methods)
+    return bool(classified) and all(risk == RiskLevel.SAFE for _, risk in classified)
+
+
+def get_opportunities(
+    exchange: str = "binance",
+    pair: str = "USDT/UAH",
+    mode: str | None = None,
+) -> OpportunitiesResponse:
+    parts = pair.upper().split("/")
+    if len(parts) != 2:
+        raise ValueError(f"Invalid pair format: {pair!r}")
+    asset, fiat = parts
+
+    usdt_balance, break_even = _load_position()
+
+    if mode is None:
+        mode = "exit" if usdt_balance > 0 else "entry"
+
+    if mode == "exit" and break_even is None:
+        raise HTTPException(422, detail="Нет открытой позиции")
+
+    # entry = мы покупаем (мейкер продаёт), exit = мы продаём (мейкер покупает)
+    trade_type = "BUY" if mode == "entry" else "SELL"
+    order_col = Order.price.asc() if trade_type == "BUY" else Order.price.desc()
+
+    with get_session() as session:
+        snap_row = session.execute(
+            select(Snapshot.id, Snapshot.collected_at)
+            .where(*_snap_where(exchange, asset, fiat, trade_type))
+            .order_by(Snapshot.collected_at.desc()).limit(1)
+        ).one_or_none()
+        if snap_row is None:
+            return OpportunitiesResponse(
+                mode=mode, reference_price=0.0, threshold_price=0.0, opportunities=[],
+            )
+        snap_id, snap_ts = snap_row
+
+        rows = session.execute(
+            select(
+                Order.price, Order.available_amount, Order.min_amount, Order.max_amount,
+                Maker.nickname, Maker.total_orders, Maker.completion_rate, Maker.is_merchant,
+                Order.payment_methods,
+            )
+            .join(Maker, Order.maker_id == Maker.id)
+            .where(Order.snapshot_id == snap_id)
+            .order_by(order_col)
+        ).all()
+
+    prices = [float(r.price) for r in rows]
+
+    if mode == "entry":
+        top5 = prices[:5]
+        reference_price = _stats.median(top5) if top5 else 0.0
+        threshold_price = reference_price * (1 - _ENTRY_DISCOUNT_PERCENT / 100)
+    else:
+        reference_price = break_even  # type: ignore[assignment]
+        threshold_price = break_even + _TARGET_PROFIT_PER_USDT  # type: ignore[operator]
+
+    opportunities: list[OpportunityItem] = []
+    for o in rows:
+        price = float(o.price)
+
+        if mode == "entry" and price > threshold_price:
+            continue
+        if mode == "exit" and price < threshold_price:
+            continue
+
+        if not _passes_trust(o.total_orders, o.completion_rate):
+            continue
+
+        methods = [m for m in json.loads(o.payment_methods or "[]") if m is not None]
+        if _ONLY_SAFE_BANKS and not _all_safe_banks(methods):
+            continue
+
+        profit_per_usdt = round(
+            (reference_price - price) if mode == "entry" else (price - break_even),  # type: ignore[operator]
+            4,
+        )
+
+        opportunities.append(OpportunityItem(
+            price=price,
+            available_amount=o.available_amount,
+            min_amount=o.min_amount,
+            max_amount=o.max_amount,
+            exchange=exchange,
+            pair=f"{asset}/{fiat}",
+            profit_per_usdt=profit_per_usdt,
+            maker=_build_maker(o.nickname, o.total_orders, o.completion_rate, o.is_merchant),
+            banks=_build_banks(methods),
+            snapshot_at=snap_ts,
+        ))
+
+    return OpportunitiesResponse(
+        mode=mode,
+        reference_price=round(reference_price, 4),
+        threshold_price=round(threshold_price, 4),
+        opportunities=opportunities,
     )
