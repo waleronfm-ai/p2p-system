@@ -50,13 +50,14 @@ def chart(
     exchange: str = Query(..., description="binance или bybit"),
     hours: int = Query(24, ge=1, le=8760, description="Глубина в часах (по умолчанию 24)"),
     raw: bool = Query(False, description="Сырые цены без фильтрации выбросов"),
+    volume_uah: float | None = Query(None, gt=0, description="Объём сделки в UAH: фильтр ордеров где min_amount ≤ volume_uah"),
 ):
     if mode.lower() not in ("buy", "sell"):
         raise HTTPException(422, detail="mode must be 'buy' or 'sell'")
     if exchange not in ("binance", "bybit"):
         raise HTTPException(422, detail="exchange must be 'binance' or 'bybit'")
     try:
-        return get_chart(pair=pair, mode=mode, exchange=exchange, hours=hours, raw=raw)
+        return get_chart(pair=pair, mode=mode, exchange=exchange, hours=hours, raw=raw, volume_uah=volume_uah)
     except ValueError as exc:
         raise HTTPException(422, detail=str(exc))
 

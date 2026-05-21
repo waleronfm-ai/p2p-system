@@ -400,6 +400,7 @@ def get_chart(
     exchange: str,
     hours: int,
     raw: bool = False,
+    volume_uah: float | None = None,
 ) -> ChartResponse:
     parts = pair.upper().split("/")
     if len(parts) != 2:
@@ -428,21 +429,28 @@ def get_chart(
         snap_ids = list(snap_ts_map)
 
         all_orders = session.execute(
-            select(Order.snapshot_id, Order.price)
+            select(Order.snapshot_id, Order.price, Order.min_amount)
             .where(Order.snapshot_id.in_(snap_ids))
             .order_by(Order.snapshot_id, order_col)
         ).all()
 
     points: list[ChartPoint] = []
     for sid, grp in _groupby(all_orders, key=lambda r: r.snapshot_id):
-        rows = list(grp)[:5]
-        if raw:
-            price = float(rows[0].price)
-        else:
-            clean, _ = filter_outliers(rows, trade_type, top_n=5)
-            if not clean:
+        all_rows = list(grp)
+        if volume_uah is not None:
+            filtered = [r for r in all_rows if r.min_amount <= volume_uah]
+            if not filtered:
                 continue
-            price = float(clean[0].price)
+            price = float(_stats.median([r.price for r in filtered]))
+        else:
+            rows = all_rows[:5]
+            if raw:
+                price = float(rows[0].price)
+            else:
+                clean, _ = filter_outliers(rows, trade_type, top_n=5)
+                if not clean:
+                    continue
+                price = float(clean[0].price)
         points.append(ChartPoint(
             timestamp=snap_ts_map[sid],
             price=price,
