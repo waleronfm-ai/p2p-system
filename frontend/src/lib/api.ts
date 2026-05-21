@@ -183,9 +183,10 @@ export interface OpportunitiesResponse {
 export async function fetchOpportunities(
   exchange: string,
   pair: string,
+  volumeUah?: number,
 ): Promise<OpportunitiesResponse> {
-  const { data } = await api.get<OpportunitiesResponse>('/api/market/opportunities', {
-    params: { exchange, pair },
-  })
+  const params: Record<string, unknown> = { exchange, pair }
+  if (volumeUah !== undefined) params.volume_uah = volumeUah
+  const { data } = await api.get<OpportunitiesResponse>('/api/market/opportunities', { params })
   return data
 }

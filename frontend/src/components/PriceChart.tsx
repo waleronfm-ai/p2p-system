@@ -244,14 +244,14 @@ export function PriceChart() {
 
   useEffect(() => {
     const load = () => {
-      fetchOpportunities(exchange, PAIR)
+      fetchOpportunities(exchange, PAIR, volumeUah)
         .then(setOpportunities)
         .catch(() => {})
     }
     load()
     const id = setInterval(load, 60_000)
     return () => clearInterval(id)
-  }, [exchange])
+  }, [exchange, volumeUah])
 
   const lastPrice = points.length > 0 ? points[points.length - 1].price : null
 

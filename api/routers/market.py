@@ -67,13 +67,14 @@ def opportunities(
     exchange: str = Query("binance", description="binance или bybit"),
     pair: str = Query("USDT/UAH", description="Пара: USDT/UAH, USDC/UAH"),
     mode: str | None = Query(None, description="entry / exit / null (авто по позиции)"),
+    volume_uah: float | None = Query(None, gt=0, description="Объём сделки в UAH: фильтр ордеров где min_amount ≤ volume_uah"),
 ):
     if mode is not None and mode not in ("entry", "exit"):
         raise HTTPException(422, detail="mode must be 'entry', 'exit' or omitted")
     if exchange not in ("binance", "bybit"):
         raise HTTPException(422, detail="exchange must be 'binance' or 'bybit'")
     try:
-        return get_opportunities(exchange=exchange, pair=pair, mode=mode)
+        return get_opportunities(exchange=exchange, pair=pair, mode=mode, volume_uah=volume_uah)
     except ValueError as exc:
         raise HTTPException(422, detail=str(exc))
 

@@ -494,6 +494,7 @@ def get_opportunities(
     exchange: str = "binance",
     pair: str = "USDT/UAH",
     mode: str | None = None,
+    volume_uah: float | None = None,
 ) -> OpportunitiesResponse:
     parts = pair.upper().split("/")
     if len(parts) != 2:
@@ -552,6 +553,9 @@ def get_opportunities(
         if mode == "entry" and price > threshold_price:
             continue
         if mode == "exit" and price < threshold_price:
+            continue
+
+        if volume_uah is not None and o.min_amount > volume_uah:
             continue
 
         if not _passes_trust(o.total_orders, o.completion_rate):
