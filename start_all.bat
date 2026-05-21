@@ -6,3 +6,8 @@ start "P2P API"      powershell -NoExit -ExecutionPolicy Bypass -Command "cd '%~
 start "P2P Frontend" powershell -NoExit -ExecutionPolicy Bypass -Command "cd '%~dp0frontend'; npm run dev"
 start "P2P Claude Code" powershell -NoExit -ExecutionPolicy Bypass -Command "cd '%~dp0'; $env:PYTHONUTF8=1; .\venv\Scripts\Activate.ps1"
 start "P2P Workspace"   powershell -NoExit -ExecutionPolicy Bypass -Command "cd '%~dp0'; $env:PYTHONUTF8=1; .\venv\Scripts\Activate.ps1"
+
+timeout /t 13 /nobreak
+
+start "" "http://localhost:5173"
+start "" "http://localhost:8000/docs"
