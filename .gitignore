@@ -7,3 +7,6 @@ data/*.db
 logs/*.log
 .DS_Store
 .claude/
+# Playwright MCP artifacts
+.playwright-mcp/
+screenshot_*.png

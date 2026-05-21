@@ -64,6 +64,17 @@
     binanceParser.ts (парсит текст страницы сделки Binance, конвертирует время Kyiv→UTC)
   - ✅ 5В — страница статистики: react-router-dom, Header с NavLink, pages/Dashboard, pages/Statistics
     Статистика: селектор периода (7д/30д/всё время), карточка P&L, сетка 4 метрик, заглушка при 0 сделок
+- **Шаг 7А завершён:** GET /api/market/opportunities — поиск выгодных ордеров по позиции
+  - api/services/market_service.py → get_opportunities(); api/routers/market.py → /opportunities
+  - Авто-режим: usdt_balance > 0 → exit (продажа), иначе → entry (покупка)
+  - entry: медиана топ-5 BUY ордеров, порог = reference * (1 - 0.3%), фильтр NORMAL+, только SAFE банки
+  - exit: break_even из истории сделок, порог = break_even + 0.3 ₴/USDT
+- **Шаг 7Б завершён:** визуализация точек возможностей на PriceChart
+  - frontend/src/components/PriceChart.tsx — DotsLayer (Recharts v3 хуки useYAxisScale/usePlotArea)
+  - Кружки на правом краю графика: зелёные (exit) / оранжевые (entry), радиус 4–10px ∝ profit
+  - OppTooltip (fixed-position): никнейм+★, уровень/сделки/%, цена, объём, лимиты, банки, прибыль ₴/USDT
+  - YAxis domain расширяется чтобы вместить цены ордеров; тултип переворачивается у правого края экрана
+  - Индикатор режима под ценой: "Режим: вход/выход" + "Порог: X.XX ₴"
 
 ## Архитектура проекта
 
@@ -155,9 +166,8 @@ $env:PYTHONUTF8=1
 - ✅ Шаг 4 — Web-интерфейс (живой график + таблица ордеров)
 - ✅ Шаг 5 — Trade Journal (5А backend, 5Б frontend, 5В статистика — всё готово)
 - ✅ Шаг 7А — GET /api/market/opportunities с автоопределением режима по позиции
+- ✅ Шаг 7Б — визуализация точек возможностей на графике (DotsLayer + OppTooltip)
 - ⬜ Шаг 6 — Telegram-алерты (пороговые уведомления по цене/спреду)
-- ✅ Шаг 7А — GET /api/market/opportunities (умный поиск выгодных ордеров по позиции)
-- ⬜ Шаг 7Б — AI-Аналитик (графики + новости)
 - ⬜ Шаг 7В — AI-Предсказатель с самообучением
 - ⬜ Шаг 8 — Связки (USDT/USDC, межбиржевые)
 

@@ -154,3 +154,37 @@ export async function fetchPosition(): Promise<Position> {
   const { data } = await api.get<Position>('/api/position')
   return data
 }
+
+// ---------------------------------------------------------------------------
+// Opportunities (Шаг 7А/7Б)
+// ---------------------------------------------------------------------------
+
+export interface Opportunity {
+  price: number
+  available_amount: number
+  min_amount: number
+  max_amount: number
+  exchange: string
+  pair: string
+  profit_per_usdt: number
+  maker: MakerInfo
+  banks: BankInfo[]
+  snapshot_at: string
+}
+
+export interface OpportunitiesResponse {
+  mode: 'entry' | 'exit'
+  reference_price: number
+  threshold_price: number
+  opportunities: Opportunity[]
+}
+
+export async function fetchOpportunities(
+  exchange: string,
+  pair: string,
+): Promise<OpportunitiesResponse> {
+  const { data } = await api.get<OpportunitiesResponse>('/api/market/opportunities', {
+    params: { exchange, pair },
+  })
+  return data
+}
