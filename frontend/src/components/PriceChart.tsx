@@ -188,6 +188,13 @@ function DotsLayer({ opportunities, dotColor, maxProfit, onHover, mousePos }: Do
 
 // ── Main component ─────────────────────────────────────────────────────────
 
+const VOLUME_CHIPS = [
+  { label: '1k', value: 1_000 },
+  { label: '5k', value: 5_000 },
+  { label: '25k', value: 25_000 },
+  { label: '100k', value: 100_000 },
+] as const
+
 export function PriceChart() {
   const [exchange, setExchange] = useState<Exchange>('binance')
   const [mode, setMode] = useState<Mode>('buy')
@@ -196,18 +203,30 @@ export function PriceChart() {
   const [initialized, setInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [volumeInput, setVolumeInput] = useState('')
+  const [volumeUah, setVolumeUah] = useState<number | undefined>(undefined)
+
   const [opportunities, setOpportunities] = useState<OpportunitiesResponse | null>(null)
   const [hoveredOpp, setHoveredOpp] = useState<HoveredState | null>(null)
 
   // Track mouse position on chart wrapper to position tooltip reliably
   const mousePos = useRef({ x: 0, y: 0 })
 
+  // Debounce raw input → resolved volumeUah (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const n = parseFloat(volumeInput)
+      setVolumeUah(volumeInput === '' || isNaN(n) ? undefined : n)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [volumeInput])
+
   useEffect(() => {
     setInitialized(false)
     setError(null)
 
     const load = () => {
-      fetchChartData(exchange, PAIR, mode, hours)
+      fetchChartData(exchange, PAIR, mode, hours, volumeUah)
         .then((res) => {
           setPoints(res.points)
           setInitialized(true)
@@ -221,7 +240,7 @@ export function PriceChart() {
     load()
     const id = setInterval(load, 60_000)
     return () => clearInterval(id)
-  }, [exchange, mode, hours])
+  }, [exchange, mode, hours, volumeUah])
 
   useEffect(() => {
     const load = () => {
@@ -304,6 +323,13 @@ export function PriceChart() {
                 </span>
               </div>
             )}
+
+            {/* Volume filter indicator */}
+            {volumeUah !== undefined && (
+              <div className="mt-1" style={{ color: 'var(--accent)', fontSize: 11 }}>
+                Объём: {volumeUah.toLocaleString('ru-UA')} ₴
+              </div>
+            )}
           </div>
 
           {/* Controls */}
@@ -340,6 +366,68 @@ export function PriceChart() {
               <option value={168}>7д</option>
             </select>
           </div>
+        </div>
+
+        {/* Volume filter row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs" style={{ color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+            Мой объём:
+          </span>
+          <input
+            type="number"
+            min={1}
+            placeholder="₴"
+            value={volumeInput}
+            onChange={(e) => setVolumeInput(e.target.value)}
+            style={{
+              width: 90,
+              background: 'var(--surface)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: 6,
+              padding: '2px 8px',
+              fontSize: 13,
+              outline: 'none',
+            }}
+          />
+          {VOLUME_CHIPS.map((chip) => {
+            const active = volumeUah === chip.value
+            return (
+              <button
+                key={chip.label}
+                onClick={() => setVolumeInput(active ? '' : String(chip.value))}
+                style={{
+                  padding: '2px 10px',
+                  fontSize: 12,
+                  borderRadius: 6,
+                  border: active ? 'none' : '1px solid var(--border)',
+                  background: active ? 'var(--accent)' : 'transparent',
+                  color: active ? '#000' : 'var(--muted)',
+                  cursor: 'pointer',
+                  fontWeight: active ? 600 : 400,
+                  transition: 'background 0.15s, color 0.15s',
+                }}
+              >
+                {chip.label}
+              </button>
+            )
+          })}
+          <button
+            onClick={() => setVolumeInput('')}
+            style={{
+              padding: '2px 10px',
+              fontSize: 12,
+              borderRadius: 6,
+              border: volumeUah === undefined ? 'none' : '1px solid var(--border)',
+              background: volumeUah === undefined ? 'var(--accent)' : 'transparent',
+              color: volumeUah === undefined ? '#000' : 'var(--muted)',
+              cursor: 'pointer',
+              fontWeight: volumeUah === undefined ? 600 : 400,
+              transition: 'background 0.15s, color 0.15s',
+            }}
+          >
+            Любой
+          </button>
         </div>
 
         {/* Chart */}

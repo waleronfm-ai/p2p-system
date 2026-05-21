@@ -22,10 +22,11 @@ export async function fetchChartData(
   pair: string,
   mode: string,
   hours: number,
+  volumeUah?: number,
 ): Promise<ChartResponse> {
-  const { data } = await api.get<ChartResponse>('/api/market/chart', {
-    params: { exchange, pair, mode, hours },
-  })
+  const params: Record<string, unknown> = { exchange, pair, mode, hours }
+  if (volumeUah !== undefined) params.volume_uah = volumeUah
+  const { data } = await api.get<ChartResponse>('/api/market/chart', { params })
   return data
 }
 
