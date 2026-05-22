@@ -256,6 +256,45 @@ function TradeTooltip({ hovered }: { hovered: TradeHoverState }) {
   )
 }
 
+// ── Band layer — p25/p75 percentile range ─────────────────────────────────
+
+interface BandLayerProps {
+  points: ChartPoint[]
+}
+
+function BandLayer({ points }: BandLayerProps) {
+  const yScale = useYAxisScale() as ((v: number) => number) | undefined
+  const plotArea = usePlotArea() as { x: number; y: number; width: number; height: number } | undefined
+
+  if (!yScale || !plotArea || points.length < 2) return null
+
+  const times = points.map((p) => parseUtc(p.timestamp).getTime())
+  const minTime = times[0]
+  const maxTime = times[times.length - 1]
+  const timeRange = maxTime - minTime
+  if (timeRange <= 0) return null
+
+  const validPts = points.filter((p) => p.p25 != null && p.p75 != null)
+  if (validPts.length < 2) return null
+
+  const getX = (iso: string) => {
+    const t = parseUtc(iso).getTime()
+    return plotArea.x + ((t - minTime) / timeRange) * plotArea.width
+  }
+
+  const topPts = validPts.map((p) => [getX(p.timestamp), yScale(p.p75!)] as const)
+  const botPts = [...validPts].reverse().map((p) => [getX(p.timestamp), yScale(p.p25!)] as const)
+
+  const d = [
+    `M ${topPts[0][0]} ${topPts[0][1]}`,
+    ...topPts.slice(1).map(([x, y]) => `L ${x} ${y}`),
+    ...botPts.map(([x, y]) => `L ${x} ${y}`),
+    'Z',
+  ].join(' ')
+
+  return <path d={d} fill="var(--accent)" fillOpacity={0.12} stroke="none" />
+}
+
 // ── Trades layer — SVG markers for BUY/SELL trades ────────────────────────
 
 interface TradesLayerProps {
@@ -477,7 +516,7 @@ export function PriceChart() {
     ? Math.max(...opportunities!.opportunities.map((o) => Math.abs(o.profit_per_usdt)))
     : 0
 
-  // Extend Y domain to include opportunity and trade prices
+  // Extend Y domain to include opportunity prices, trade prices, and p25/p75 band
   const yDomain = useMemo<
     [
       number | 'auto' | ((v: number) => number),
@@ -487,6 +526,10 @@ export function PriceChart() {
     const extras: number[] = []
     if (showDots) extras.push(...opportunities!.opportunities.map((o) => o.price))
     if (visibleTrades.length > 0) extras.push(...visibleTrades.map((t) => t.price))
+    for (const p of points) {
+      if (p.p25 != null) extras.push(p.p25)
+      if (p.p75 != null) extras.push(p.p75)
+    }
     if (extras.length === 0) return ['auto', 'auto']
     const minExtra = Math.min(...extras)
     const maxExtra = Math.max(...extras)
@@ -494,7 +537,7 @@ export function PriceChart() {
       (dataMin: number) => +(Math.min(dataMin, minExtra) - 0.1).toFixed(2),
       (dataMax: number) => +(Math.max(dataMax, maxExtra) + 0.1).toFixed(2),
     ]
-  }, [showDots, opportunities, visibleTrades])
+  }, [showDots, opportunities, visibleTrades, points])
 
   const showLegend = showMarket || hasTrades
 
@@ -732,6 +775,10 @@ export function PriceChart() {
                     name === 'price' ? (showMarket ? 'Доступно мне' : 'Рынок') : 'Общий рынок',
                   ]}
                 />
+                <Customized
+                  component={() => <BandLayer points={points} />}
+                />
+
                 <Line
                   type="monotone"
                   dataKey="price"

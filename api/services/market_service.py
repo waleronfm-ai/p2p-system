@@ -446,15 +446,28 @@ def get_chart(
         rows = pool[:5]
         if raw:
             price = float(rows[0].price)
+            pool_prices = [float(r.price) for r in pool]
         else:
             clean, _ = filter_outliers(rows, trade_type, top_n=5)
             if not clean:
                 continue
             price = float(clean[0].price)
+            clean_pool, _ = filter_outliers(pool, trade_type, top_n=len(pool))
+            pool_prices = [float(r.price) for r in clean_pool]
+
+        p25_val: float | None = None
+        p75_val: float | None = None
+        if len(pool_prices) >= 4:
+            qs = _stats.quantiles(pool_prices, n=4)
+            p25_val = round(qs[0], 4)
+            p75_val = round(qs[2], 4)
+
         points.append(ChartPoint(
             timestamp=snap_ts_map[sid],
             price=price,
             snapshot_id=sid,
+            p25=p25_val,
+            p75=p75_val,
         ))
 
     return ChartResponse(

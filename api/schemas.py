@@ -111,6 +111,8 @@ class ChartPoint(BaseModel):
     timestamp: datetime
     price: float
     snapshot_id: int
+    p25: float | None = None
+    p75: float | None = None
 
 
 class ChartResponse(BaseModel):

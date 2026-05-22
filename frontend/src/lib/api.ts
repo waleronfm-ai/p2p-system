@@ -6,6 +6,8 @@ export interface ChartPoint {
   timestamp: string
   price: number
   snapshot_id: number
+  p25?: number | null
+  p75?: number | null
 }
 
 export interface ChartResponse {
