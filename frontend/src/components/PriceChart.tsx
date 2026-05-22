@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef, useState } from 'react'
 import {
   CartesianGrid,
   Customized,
+  Legend,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -205,6 +206,7 @@ export function PriceChart() {
 
   const [volumeInput, setVolumeInput] = useState('')
   const [volumeUah, setVolumeUah] = useState<number | undefined>(undefined)
+  const [marketPoints, setMarketPoints] = useState<ChartPoint[]>([])
 
   const [opportunities, setOpportunities] = useState<OpportunitiesResponse | null>(null)
   const [hoveredOpp, setHoveredOpp] = useState<HoveredState | null>(null)
@@ -242,6 +244,22 @@ export function PriceChart() {
     return () => clearInterval(id)
   }, [exchange, mode, hours, volumeUah])
 
+  // Second series: unfiltered market data — only when volume filter is active
+  useEffect(() => {
+    if (volumeUah === undefined) {
+      setMarketPoints([])
+      return
+    }
+    const load = () => {
+      fetchChartData(exchange, PAIR, mode, hours)
+        .then((res) => setMarketPoints(res.points))
+        .catch(() => setMarketPoints([]))
+    }
+    load()
+    const id = setInterval(load, 60_000)
+    return () => clearInterval(id)
+  }, [exchange, mode, hours, volumeUah])
+
   useEffect(() => {
     const load = () => {
       fetchOpportunities(exchange, PAIR, volumeUah)
@@ -255,9 +273,18 @@ export function PriceChart() {
 
   const lastPrice = points.length > 0 ? points[points.length - 1].price : null
 
+  const showMarket = volumeUah !== undefined && marketPoints.length > 0
+
+  const marketById = useMemo(() => {
+    const m = new Map<number, number>()
+    for (const p of marketPoints) m.set(p.snapshot_id, p.price)
+    return m
+  }, [marketPoints])
+
   const chartData = points.map((p) => ({
     time: formatTime(p.timestamp, hours),
     price: p.price,
+    marketPrice: marketById.get(p.snapshot_id),
   }))
 
   // Show opportunity dots only when chart mode is compatible with opportunity mode
@@ -472,6 +499,17 @@ export function PriceChart() {
                   width={52}
                   tickFormatter={(v: number) => v.toFixed(1)}
                 />
+                {showMarket && (
+                  <Legend
+                    verticalAlign="top"
+                    height={22}
+                    wrapperStyle={{ fontSize: 11, paddingBottom: 2 }}
+                    formatter={(value) => (
+                      <span style={{ color: 'var(--muted)' }}>{value}</span>
+                    )}
+                  />
+                )}
+
                 <Tooltip
                   contentStyle={{
                     background: 'var(--surface)',
@@ -481,16 +519,33 @@ export function PriceChart() {
                     fontSize: 12,
                   }}
                   labelStyle={{ color: 'var(--muted)' }}
-                  formatter={(value: number) => [value.toFixed(4), 'Цена']}
+                  formatter={(value: number, name: string) => [
+                    value.toFixed(4),
+                    name === 'price' ? (showMarket ? 'Доступно мне' : 'Рынок') : 'Общий рынок',
+                  ]}
                 />
                 <Line
                   type="monotone"
                   dataKey="price"
+                  name={showMarket ? 'Доступно мне' : 'Рынок'}
                   stroke="var(--accent)"
                   strokeWidth={2}
                   dot={false}
                   activeDot={{ r: 4, fill: 'var(--accent)' }}
                 />
+                {showMarket && (
+                  <Line
+                    type="monotone"
+                    dataKey="marketPrice"
+                    name="Общий рынок"
+                    stroke="var(--muted)"
+                    strokeWidth={1}
+                    strokeDasharray="4 3"
+                    dot={false}
+                    activeDot={false}
+                    connectNulls
+                  />
+                )}
 
                 {showDots && (
                   <Customized
