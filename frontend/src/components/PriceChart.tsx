@@ -16,8 +16,10 @@ import {
   type ChartPoint,
   type Opportunity,
   type OpportunitiesResponse,
+  type Trade,
   fetchChartData,
   fetchOpportunities,
+  fetchTrades,
 } from '../lib/api'
 
 type Exchange = 'binance' | 'bybit'
@@ -54,6 +56,17 @@ function formatTime(iso: string, hours: Hours): string {
     timeZone: TZ,
     month: 'short',
     day: 'numeric',
+  }).format(d)
+}
+
+function formatDateTime(iso: string): string {
+  const d = parseUtc(iso)
+  return new Intl.DateTimeFormat('ru-UA', {
+    timeZone: TZ,
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(d)
 }
 
@@ -147,7 +160,6 @@ interface DotsLayerProps {
 }
 
 function DotsLayer({ opportunities, dotColor, maxProfit, onHover, mousePos }: DotsLayerProps) {
-  // Recharts v3 hooks — work inside the Recharts chart context tree
   const yScale = useYAxisScale() as ((v: number) => number) | undefined
   const plotArea = usePlotArea() as { x: number; y: number; width: number; height: number } | undefined
 
@@ -187,6 +199,143 @@ function DotsLayer({ opportunities, dotColor, maxProfit, onHover, mousePos }: Do
   )
 }
 
+// ── Trade tooltip ──────────────────────────────────────────────────────────
+
+interface TradeHoverState {
+  trade: Trade
+  clientX: number
+  clientY: number
+}
+
+function TradeTooltip({ hovered }: { hovered: TradeHoverState }) {
+  const { trade, clientX, clientY } = hovered
+  const isBuy = trade.trade_type.toLowerCase() === 'buy'
+  const typeLabel = isBuy ? 'Покупка' : 'Продажа'
+  const typeColor = isBuy ? '#22C55E' : '#EF4444'
+
+  const TOOLTIP_W = 220
+  const left =
+    clientX + 14 + TOOLTIP_W > window.innerWidth ? clientX - TOOLTIP_W - 14 : clientX + 14
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        left,
+        top: clientY - 14,
+        background: 'var(--surface)',
+        border: '1px solid rgba(255,255,255,0.13)',
+        borderRadius: 8,
+        padding: '10px 14px',
+        fontSize: 12,
+        color: 'var(--text)',
+        zIndex: 2001,
+        pointerEvents: 'none',
+        minWidth: 180,
+        maxWidth: 220,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.55)',
+        lineHeight: '1.65',
+      }}
+    >
+      <div style={{ fontWeight: 600, color: typeColor, marginBottom: 4 }}>{typeLabel}</div>
+      <div>
+        Цена: <strong>{trade.price.toFixed(2)} ₴</strong>
+      </div>
+      <div>
+        Объём: <strong>{trade.amount_usdt.toFixed(2)} USDT</strong>
+      </div>
+      <div>
+        Сумма: <strong>{trade.amount_uah.toLocaleString('ru-UA', { maximumFractionDigits: 0 })} ₴</strong>
+      </div>
+      {trade.counterparty && <div>Контрагент: {trade.counterparty}</div>}
+      {trade.bank && <div>Банк: {trade.bank}</div>}
+      <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 4 }}>
+        {formatDateTime(trade.executed_at)}
+      </div>
+    </div>
+  )
+}
+
+// ── Trades layer — SVG markers for BUY/SELL trades ────────────────────────
+
+interface TradesLayerProps {
+  trades: Trade[]
+  points: ChartPoint[]
+  onHover: (state: TradeHoverState | null) => void
+  mousePos: React.MutableRefObject<{ x: number; y: number }>
+}
+
+function TradesLayer({ trades, points, onHover, mousePos }: TradesLayerProps) {
+  const yScale = useYAxisScale() as ((v: number) => number) | undefined
+  const plotArea = usePlotArea() as { x: number; y: number; width: number; height: number } | undefined
+
+  if (!yScale || !plotArea || points.length < 2) return null
+
+  const times = points.map((p) => parseUtc(p.timestamp).getTime())
+  const minTime = times[0]
+  const maxTime = times[times.length - 1]
+  const timeRange = maxTime - minTime
+  if (timeRange <= 0) return null
+
+  const MARKER_R = 7
+
+  return (
+    <g>
+      {trades.map((trade) => {
+        const t = parseUtc(trade.executed_at).getTime()
+        if (t < minTime || t > maxTime) return null
+
+        const cx = plotArea.x + ((t - minTime) / timeRange) * plotArea.width
+        const cy = yScale(trade.price)
+        if (!Number.isFinite(cy)) return null
+
+        const isBuy = trade.trade_type.toLowerCase() === 'buy'
+        const color = isBuy ? '#22C55E' : '#EF4444'
+        // BUY marker sits below the price line, SELL sits above
+        const markerCy = isBuy ? cy + MARKER_R + 3 : cy - MARKER_R - 3
+        if (
+          markerCy < plotArea.y - MARKER_R - 2 ||
+          markerCy > plotArea.y + plotArea.height + MARKER_R + 2
+        )
+          return null
+
+        return (
+          <g
+            key={trade.id}
+            style={{ cursor: 'pointer' }}
+            onMouseEnter={() =>
+              onHover({ trade, clientX: mousePos.current.x, clientY: mousePos.current.y })
+            }
+            onMouseLeave={() => onHover(null)}
+          >
+            <circle
+              cx={cx}
+              cy={markerCy}
+              r={MARKER_R}
+              fill={color}
+              fillOpacity={0.9}
+              stroke="rgba(0,0,0,0.45)"
+              strokeWidth={1}
+            />
+            <text
+              x={cx}
+              y={markerCy}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize={8}
+              fill="white"
+              fontWeight="bold"
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+            >
+              {isBuy ? '▲' : '▼'}
+            </text>
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
 // ── Main component ─────────────────────────────────────────────────────────
 
 const VOLUME_CHIPS = [
@@ -210,6 +359,9 @@ export function PriceChart() {
 
   const [opportunities, setOpportunities] = useState<OpportunitiesResponse | null>(null)
   const [hoveredOpp, setHoveredOpp] = useState<HoveredState | null>(null)
+
+  const [trades, setTrades] = useState<Trade[]>([])
+  const [hoveredTrade, setHoveredTrade] = useState<TradeHoverState | null>(null)
 
   // Track mouse position on chart wrapper to position tooltip reliably
   const mousePos = useRef({ x: 0, y: 0 })
@@ -271,6 +423,16 @@ export function PriceChart() {
     return () => clearInterval(id)
   }, [exchange, volumeUah])
 
+  // Trades: fetch once on mount + refresh every 60s, independent of filters
+  useEffect(() => {
+    const load = () => {
+      fetchTrades(500).then(setTrades).catch(() => {})
+    }
+    load()
+    const id = setInterval(load, 60_000)
+    return () => clearInterval(id)
+  }, [])
+
   const lastPrice = points.length > 0 ? points[points.length - 1].price : null
 
   const showMarket = volumeUah !== undefined && marketPoints.length > 0
@@ -287,6 +449,19 @@ export function PriceChart() {
     marketPrice: marketById.get(p.snapshot_id),
   }))
 
+  // Filter trades to visible time window + current exchange
+  const visibleTrades = useMemo(() => {
+    const cutoff = Date.now() - hours * 60 * 60 * 1000
+    return trades.filter((t) => {
+      const ts = parseUtc(t.executed_at).getTime()
+      return ts >= cutoff && t.exchange.toLowerCase() === exchange.toLowerCase()
+    })
+  }, [trades, hours, exchange])
+
+  const hasBuyTrades = visibleTrades.some((t) => t.trade_type.toLowerCase() === 'buy')
+  const hasSellTrades = visibleTrades.some((t) => t.trade_type.toLowerCase() === 'sell')
+  const hasTrades = hasBuyTrades || hasSellTrades
+
   // Show opportunity dots only when chart mode is compatible with opportunity mode
   const showDots =
     initialized &&
@@ -302,22 +477,26 @@ export function PriceChart() {
     ? Math.max(...opportunities!.opportunities.map((o) => Math.abs(o.profit_per_usdt)))
     : 0
 
-  // Extend Y domain to include opportunity prices so dots appear inside the chart
+  // Extend Y domain to include opportunity and trade prices
   const yDomain = useMemo<
     [
       number | 'auto' | ((v: number) => number),
       number | 'auto' | ((v: number) => number),
     ]
   >(() => {
-    if (!showDots) return ['auto', 'auto']
-    const opps = opportunities!.opportunities
-    const minOpp = Math.min(...opps.map((o) => o.price))
-    const maxOpp = Math.max(...opps.map((o) => o.price))
+    const extras: number[] = []
+    if (showDots) extras.push(...opportunities!.opportunities.map((o) => o.price))
+    if (visibleTrades.length > 0) extras.push(...visibleTrades.map((t) => t.price))
+    if (extras.length === 0) return ['auto', 'auto']
+    const minExtra = Math.min(...extras)
+    const maxExtra = Math.max(...extras)
     return [
-      (dataMin: number) => +(Math.min(dataMin, minOpp) - 0.1).toFixed(2),
-      (dataMax: number) => +(Math.max(dataMax, maxOpp) + 0.1).toFixed(2),
+      (dataMin: number) => +(Math.min(dataMin, minExtra) - 0.1).toFixed(2),
+      (dataMax: number) => +(Math.max(dataMax, maxExtra) + 0.1).toFixed(2),
     ]
-  }, [showDots, opportunities])
+  }, [showDots, opportunities, visibleTrades])
+
+  const showLegend = showMarket || hasTrades
 
   return (
     <>
@@ -499,14 +678,43 @@ export function PriceChart() {
                   width={52}
                   tickFormatter={(v: number) => v.toFixed(1)}
                 />
-                {showMarket && (
+                {showLegend && (
                   <Legend
                     verticalAlign="top"
                     height={22}
                     wrapperStyle={{ fontSize: 11, paddingBottom: 2 }}
-                    formatter={(value) => (
-                      <span style={{ color: 'var(--muted)' }}>{value}</span>
-                    )}
+                    content={(props) => {
+                      const payload = (props as { payload?: Array<{ value: string; color: string; payload?: { strokeDasharray?: string } }> }).payload ?? []
+                      const entries: Array<{ label: string; color: string; dashed?: boolean; circle?: boolean }> = []
+                      for (const p of payload) {
+                        entries.push({ label: p.value, color: p.color, dashed: !!p.payload?.strokeDasharray })
+                      }
+                      if (hasBuyTrades) entries.push({ label: 'Покупки', color: '#22C55E', circle: true })
+                      if (hasSellTrades) entries.push({ label: 'Продажи', color: '#EF4444', circle: true })
+                      return (
+                        <div style={{ display: 'flex', gap: 14, justifyContent: 'center', alignItems: 'center' }}>
+                          {entries.map((e, i) => (
+                            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--muted)' }}>
+                              {e.circle ? (
+                                <svg width={12} height={12} style={{ flexShrink: 0 }}>
+                                  <circle cx={6} cy={6} r={5} fill={e.color} fillOpacity={0.9} />
+                                </svg>
+                              ) : (
+                                <svg width={16} height={4} style={{ flexShrink: 0 }}>
+                                  <line
+                                    x1={0} y1={2} x2={16} y2={2}
+                                    stroke={e.color}
+                                    strokeWidth={e.dashed ? 1 : 2}
+                                    strokeDasharray={e.dashed ? '4 3' : undefined}
+                                  />
+                                </svg>
+                              )}
+                              {e.label}
+                            </span>
+                          ))}
+                        </div>
+                      )
+                    }}
                   />
                 )}
 
@@ -560,6 +768,19 @@ export function PriceChart() {
                     )}
                   />
                 )}
+
+                {hasTrades && (
+                  <Customized
+                    component={() => (
+                      <TradesLayer
+                        trades={visibleTrades}
+                        points={points}
+                        onHover={setHoveredTrade}
+                        mousePos={mousePos}
+                      />
+                    )}
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -575,6 +796,7 @@ export function PriceChart() {
       </div>
 
       {hoveredOpp && <OppTooltip hovered={hoveredOpp} />}
+      {hoveredTrade && <TradeTooltip hovered={hoveredTrade} />}
     </>
   )
 }
