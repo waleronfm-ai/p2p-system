@@ -109,14 +109,14 @@ export function Statistics() {
             <div
               className="text-4xl font-bold"
               style={{
-                color: stats.pnl_uah > 0
+                color: stats.pnl_uah != null && stats.pnl_uah > 0
                   ? 'var(--green)'
-                  : stats.pnl_uah < 0
+                  : stats.pnl_uah != null && stats.pnl_uah < 0
                     ? 'var(--red)'
                     : 'var(--muted)',
               }}
             >
-              {fmtUah(stats.pnl_uah)}
+              {stats.pnl_uah != null ? fmtUah(stats.pnl_uah) : '—'}
             </div>
           </div>
 

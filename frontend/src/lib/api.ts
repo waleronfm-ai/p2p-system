@@ -132,7 +132,7 @@ export interface TradeStats {
   total_uah_received: number
   avg_buy_price: number | null
   avg_sell_price: number | null
-  pnl_uah: number
+  pnl_uah: number | null
 }
 
 export async function fetchTradeStats(from_dt?: string, to_dt?: string): Promise<TradeStats> {

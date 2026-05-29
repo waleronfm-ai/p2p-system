@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from api.schemas import PositionResponse
 from core.database import Trade, get_session
+from core.utils.pnl import calc_realized_pnl
 
 router = APIRouter(prefix="/position", tags=["position"])
 
@@ -27,7 +28,7 @@ def get_position():
     if total_buy_usdt > 0:
         avg_buy_price = total_buy_uah / total_buy_usdt
         break_even = avg_buy_price
-        realized_profit_uah = round(total_sell_uah - total_sell_usdt * avg_buy_price, 4)
+        realized_profit_uah = calc_realized_pnl(total_buy_uah, total_buy_usdt, total_sell_uah, total_sell_usdt)
     else:
         avg_buy_price = None
         break_even = None

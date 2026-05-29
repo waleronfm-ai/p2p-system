@@ -169,7 +169,7 @@ class TradeStats(BaseModel):
     total_uah_received: float
     avg_buy_price: float | None
     avg_sell_price: float | None
-    pnl_uah: float = Field(..., description="total_uah_received - total_uah_spent")
+    pnl_uah: float | None = Field(None, description="Реализованный P&L: sell_uah - sell_usdt * avg_buy_price")
 
 
 class PositionResponse(BaseModel):

@@ -5,6 +5,8 @@ from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select, func
 
+from core.utils.pnl import calc_realized_pnl
+
 from api.schemas import TradeCreate, TradeOut, TradeStats
 from core.database import Trade, get_session
 
@@ -81,18 +83,20 @@ def trade_stats(
 
     total_uah_spent = sum(t.amount_uah for t in buys)
     total_uah_received = sum(t.amount_uah for t in sells)
+    total_usdt_bought = sum(t.amount_usdt for t in buys)
+    total_usdt_sold = sum(t.amount_usdt for t in sells)
 
     return TradeStats(
         total_trades=len(trades),
         buy_count=len(buys),
         sell_count=len(sells),
-        total_usdt_bought=sum(t.amount_usdt for t in buys),
-        total_usdt_sold=sum(t.amount_usdt for t in sells),
+        total_usdt_bought=total_usdt_bought,
+        total_usdt_sold=total_usdt_sold,
         total_uah_spent=total_uah_spent,
         total_uah_received=total_uah_received,
         avg_buy_price=sum(t.price for t in buys) / len(buys) if buys else None,
         avg_sell_price=sum(t.price for t in sells) / len(sells) if sells else None,
-        pnl_uah=round(total_uah_received - total_uah_spent, 2),
+        pnl_uah=calc_realized_pnl(total_uah_spent, total_usdt_bought, total_uah_received, total_usdt_sold),
     )
 
 
