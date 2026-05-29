@@ -30,6 +30,10 @@ class Maker(Base):
 
 class Snapshot(Base):
     __tablename__ = "snapshots"
+    __table_args__ = (
+        Index("ix_snap_combo", "exchange", "asset", "fiat", "trade_type", "collected_at"),
+        Index("ix_snap_collected_at", "collected_at"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     exchange: Mapped[str] = mapped_column(String(20))
@@ -45,6 +49,9 @@ class Snapshot(Base):
 
 class Order(Base):
     __tablename__ = "orders"
+    __table_args__ = (
+        Index("ix_order_snapshot_id", "snapshot_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     snapshot_id: Mapped[int] = mapped_column(ForeignKey("snapshots.id"))
