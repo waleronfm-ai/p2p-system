@@ -685,6 +685,10 @@ export function PriceChart() {
           onMouseMove={(e) => {
             mousePos.current = { x: e.clientX, y: e.clientY }
           }}
+          onMouseLeave={() => {
+            setHoveredOpp(null)
+            setHoveredTrade(null)
+          }}
         >
           {!initialized && (
             <div
