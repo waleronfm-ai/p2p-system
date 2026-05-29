@@ -4,6 +4,8 @@ import json
 import random
 import time
 from datetime import UTC, datetime
+
+import httpx
 from pathlib import Path
 from typing import Any, Union
 
@@ -44,21 +46,68 @@ def _pause(cfg: TrackerConfig) -> None:
     time.sleep(random.uniform(cfg.min_pause_seconds, cfg.max_pause_seconds))
 
 
+_RATE_LIMIT_PAUSE = 90.0  # seconds to wait on HTTP 429
+
+
 def _with_retry(fn: Any, cfg: TrackerConfig, label: str) -> Any:
     last_exc: Exception | None = None
     for attempt in range(cfg.max_retries):
         try:
             return fn()
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code
+            if status == 429:
+                last_exc = exc
+                if attempt < cfg.max_retries - 1:
+                    _logger.warning(
+                        "[%s] HTTP 429 rate limit (попытка %d/%d) — пауза %.0f с",
+                        label, attempt + 1, cfg.max_retries, _RATE_LIMIT_PAUSE,
+                    )
+                    time.sleep(_RATE_LIMIT_PAUSE)
+                else:
+                    _logger.error("[%s] HTTP 429 — все попытки исчерпаны: %s", label, exc)
+            elif 400 <= status < 500:
+                _logger.error("[%s] HTTP %d — fail fast: %s", label, status, exc)
+                raise
+            else:  # 5xx
+                last_exc = exc
+                delay = min(cfg.retry_base_delay * (2 ** attempt), cfg.retry_max_delay)
+                if attempt < cfg.max_retries - 1:
+                    _logger.warning(
+                        "[%s] HTTP %d (попытка %d/%d) — повтор через %.1f с",
+                        label, status, attempt + 1, cfg.max_retries, delay,
+                    )
+                    time.sleep(delay)
+                else:
+                    _logger.error("[%s] HTTP %d — все попытки исчерпаны: %s", label, status, exc)
+        except RuntimeError as exc:
+            _logger.error("[%s] API бизнес-ошибка — fail fast: %s", label, exc)
+            raise
+        except httpx.TransportError as exc:
+            last_exc = exc
+            delay = min(cfg.retry_base_delay * (2 ** attempt), cfg.retry_max_delay)
+            if attempt < cfg.max_retries - 1:
+                _logger.warning(
+                    "[%s] сетевая ошибка (попытка %d/%d) — повтор через %.1f с: %s",
+                    label, attempt + 1, cfg.max_retries, delay, exc,
+                )
+                time.sleep(delay)
+            else:
+                _logger.error("[%s] сетевая ошибка — все попытки исчерпаны: %s", label, exc)
         except Exception as exc:
             last_exc = exc
             delay = min(cfg.retry_base_delay * (2 ** attempt), cfg.retry_max_delay)
-            _logger.error(
-                "[%s] попытка %d/%d провалилась: %s — повтор через %.1f с",
-                label, attempt + 1, cfg.max_retries, exc, delay,
-            )
             if attempt < cfg.max_retries - 1:
+                _logger.warning(
+                    "[%s] ошибка (попытка %d/%d) — повтор через %.1f с: %s",
+                    label, attempt + 1, cfg.max_retries, delay, exc,
+                )
                 time.sleep(delay)
-    raise last_exc  # type: ignore[misc]
+            else:
+                _logger.error("[%s] ошибка — все попытки исчерпаны: %s", label, exc)
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError(f"[{label}] retry loop exhausted without exception")
 
 
 class Collector:
