@@ -1,0 +1,15 @@
+[Unit]
+Description=P2P Tracker — collect Binance and Bybit P2P snapshots
+After=network.target
+
+[Service]
+Type=simple
+User=p2p
+WorkingDirectory=/opt/p2p-system
+Environment=PYTHONPATH=/opt/p2p-system
+ExecStart=/opt/p2p-system/venv/bin/python scripts/run_tracker.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

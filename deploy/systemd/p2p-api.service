@@ -1,0 +1,18 @@
+[Unit]
+Description=P2P API — FastAPI served by uvicorn
+After=network.target
+
+[Service]
+Type=simple
+User=p2p
+WorkingDirectory=/opt/p2p-system
+Environment=PYTHONPATH=/opt/p2p-system
+# Variant B: direct access from external machines (current)
+ExecStart=/opt/p2p-system/venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 1
+# Variant A: localhost only — use when Cloudflare Tunnel or nginx is in place
+# ExecStart=/opt/p2p-system/venv/bin/uvicorn api.main:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
