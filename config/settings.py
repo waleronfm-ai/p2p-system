@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     tracker_interval_seconds: int = 60
     deep_snapshot_interval_seconds: int = 900
+    api_key: str = "dev-local-key"
+    cors_origins: str = "http://localhost:5173,http://localhost:3000"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
 
 settings = Settings()

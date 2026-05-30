@@ -1,6 +1,14 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: 'http://localhost:8000' })
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000',
+})
+
+api.interceptors.request.use((config) => {
+  const key = import.meta.env.VITE_API_KEY
+  if (key) config.headers['X-Api-Key'] = key
+  return config
+})
 
 export interface ChartPoint {
   timestamp: string

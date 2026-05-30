@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routers import banks, health, info, makers, market, position, trades
+from config.settings import settings
 
 
 @asynccontextmanager
@@ -21,8 +22,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
-    allow_credentials=True,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -2,18 +2,20 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 
 from core.utils.pnl import calc_realized_pnl
 
+from api.dependencies import require_api_key
 from api.schemas import TradeCreate, TradeOut, TradeStats
 from core.database import Trade, get_session
 
 router = APIRouter(prefix="/trades", tags=["trades"])
 
 
-@router.post("", response_model=TradeOut, status_code=201, summary="Добавить сделку")
+@router.post("", response_model=TradeOut, status_code=201, summary="Добавить сделку",
+             dependencies=[Depends(require_api_key)])
 def create_trade(body: TradeCreate):
     if body.trade_type.upper() not in ("BUY", "SELL"):
         raise HTTPException(422, detail="trade_type must be 'BUY' or 'SELL'")
@@ -109,7 +111,8 @@ def get_trade(trade_id: int):
         return TradeOut.model_validate(trade)
 
 
-@router.delete("/{trade_id}", status_code=204, summary="Удалить сделку")
+@router.delete("/{trade_id}", status_code=204, summary="Удалить сделку",
+               dependencies=[Depends(require_api_key)])
 def delete_trade(trade_id: int):
     with get_session() as session:
         trade = session.get(Trade, trade_id)
