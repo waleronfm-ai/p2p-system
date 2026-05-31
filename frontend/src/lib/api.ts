@@ -200,3 +200,24 @@ export async function fetchOpportunities(
   const { data } = await api.get<OpportunitiesResponse>('/api/market/opportunities', { params })
   return data
 }
+
+// ---------------------------------------------------------------------------
+// Tracker Health (Шаг 8А)
+// ---------------------------------------------------------------------------
+
+export interface TrackerHealth {
+  tracker_alive: boolean
+  minutes_since_last_snapshot: number | null
+  last_snapshot_at: string | null
+  snapshots_last_hour: number
+  orders_last_hour: number
+  total_snapshots: number
+  total_orders: number
+  db_size_mb: number
+  server_time: string
+}
+
+export async function fetchTrackerHealth(): Promise<TrackerHealth> {
+  const { data } = await api.get<TrackerHealth>('/api/info/tracker-health')
+  return data
+}

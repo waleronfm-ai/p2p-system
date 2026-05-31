@@ -1,5 +1,6 @@
 import { PositionBar } from '../components/PositionBar'
 import { PriceChart } from '../components/PriceChart'
+import { TrackerHealthWidget } from '../components/TrackerHealthWidget'
 import { TradesHistory } from '../components/TradesHistory'
 
 const cardStyle: React.CSSProperties = {
@@ -24,6 +25,7 @@ function AIAgentCard() {
 export function Dashboard() {
   return (
     <main className="flex flex-col gap-4">
+      <TrackerHealthWidget />
       <PositionBar />
 
       <div style={cardStyle}>
