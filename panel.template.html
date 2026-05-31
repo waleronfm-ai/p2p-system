@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>P2P Dev Panel</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  padding: 24px 28px;
+  min-height: 100vh;
+}
+h1 { font-size: 1.35rem; color: #58a6ff; margin-bottom: 2px; }
+.subtitle { color: #8b949e; font-size: 0.82rem; margin-bottom: 26px; }
+h2 {
+  font-size: 0.78rem; text-transform: uppercase; color: #8b949e;
+  letter-spacing: 0.06em; margin-bottom: 10px;
+  border-bottom: 1px solid #21262d; padding-bottom: 5px;
+}
+section { margin-bottom: 26px; }
+
+.actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.card {
+  background: #161b22; border: 1px solid #21262d; border-radius: 8px;
+  padding: 14px 16px; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.card:hover { background: #1c2128; }
+.card.green:hover  { border-color: #3fb950; }
+.card.blue:hover   { border-color: #388bfd; }
+.card.orange:hover { border-color: #d29922; }
+.card.purple:hover { border-color: #bc8cff; }
+.card.red:hover    { border-color: #f85149; }
+.card-icon  { font-size: 1.4rem; margin-bottom: 6px; }
+.card-title { font-size: 0.92rem; font-weight: 600; color: #e6edf3; margin-bottom: 3px; }
+.card-desc  { font-size: 0.74rem; color: #8b949e; }
+
+.creds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cred-row {
+  background: #161b22; border: 1px solid #21262d; border-radius: 6px;
+  padding: 9px 12px; display: flex; align-items: center; gap: 10px;
+}
+.cred-label { font-size: 0.75rem; color: #8b949e; white-space: nowrap; flex-shrink: 0; width: 120px; }
+.cred-value { font-size: 0.8rem; color: #e6edf3; font-family: 'Consolas', monospace; flex: 1; word-break: break-all; }
+.cred-value.secret { color: #f78166; }
+.cred-value.placeholder { color: #484f58; font-style: italic; }
+.copy-btn {
+  background: #21262d; border: 1px solid #30363d; color: #8b949e;
+  border-radius: 4px; padding: 2px 8px; font-size: 0.7rem;
+  cursor: pointer; flex-shrink: 0;
+}
+.copy-btn:hover { color: #e6edf3; background: #30363d; }
+
+.cmds { display: flex; flex-direction: column; gap: 7px; }
+.cmd-row {
+  background: #161b22; border: 1px solid #21262d; border-radius: 6px;
+  padding: 7px 12px; display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: border-color 0.15s;
+}
+.cmd-row:hover { border-color: #388bfd; }
+.cmd-label { font-size: 0.7rem; color: #8b949e; white-space: nowrap; width: 90px; flex-shrink: 0; }
+.cmd-text  { font-family: 'Consolas', monospace; font-size: 0.8rem; color: #79c0ff; flex: 1; }
+
+.toast {
+  position: fixed; bottom: 22px; right: 22px;
+  background: #3fb950; color: #0d1117;
+  padding: 7px 18px; border-radius: 6px;
+  font-size: 0.82rem; font-weight: 600;
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.18s, transform 0.18s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.hint { font-size: 0.72rem; color: #484f58; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>⚡ P2P Dev Panel</h1>
+<p class="subtitle">Production: YOUR_VPS_IP · p2p-tracker + p2p-api on VPS · Frontend local Vite</p>
+
+<section>
+  <h2>Быстрые действия</h2>
+  <div class="actions">
+
+    <div class="card green" onclick="runBat('dev_local.bat')">
+      <div class="card-icon">🛠️</div>
+      <div class="card-title">Dev Local</div>
+      <div class="card-desc">API localhost:8000 + Vite :5173</div>
+    </div>
+
+    <div class="card" onclick="runBat('view_prod.bat')">
+      <div class="card-icon">🌐</div>
+      <div class="card-title">View Production</div>
+      <div class="card-desc">Vite → VPS API</div>
+    </div>
+
+    <div class="card orange" onclick="runBat('deploy.bat')">
+      <div class="card-icon">🚀</div>
+      <div class="card-title">Deploy → VPS</div>
+      <div class="card-desc">push + pull + restart сервисов</div>
+    </div>
+
+    <div class="card purple" onclick="runBat('pull_db_from_vps.bat')">
+      <div class="card-icon">💾</div>
+      <div class="card-title">Скачать БД</div>
+      <div class="card-desc">VPS → data/p2p_prod_*.db</div>
+    </div>
+
+    <div class="card red" onclick="copy('ssh -p YOUR_SSH_PORT -i YOUR_KEY_PATH root@YOUR_VPS_IP')">
+      <div class="card-icon">🖥️</div>
+      <div class="card-title">SSH → VPS</div>
+      <div class="card-desc">Копирует ssh-команду в буфер</div>
+    </div>
+
+    <div class="card blue" onclick="window.open('http://localhost:5173', '_blank')">
+      <div class="card-icon">📊</div>
+      <div class="card-title">Открыть фронт</div>
+      <div class="card-desc">localhost:5173</div>
+    </div>
+
+    <div class="card blue" onclick="window.open('http://YOUR_VPS_IP:8000/docs', '_blank')">
+      <div class="card-icon">📚</div>
+      <div class="card-title">Swagger API</div>
+      <div class="card-desc">YOUR_VPS_IP:8000/docs</div>
+    </div>
+
+    <div class="card blue" onclick="window.open('https://github.com/YOUR_ORG/YOUR_REPO', '_blank')">
+      <div class="card-icon">🐙</div>
+      <div class="card-title">GitHub</div>
+      <div class="card-desc">YOUR_ORG/YOUR_REPO</div>
+    </div>
+
+  </div>
+  <p class="hint">Карточки .bat: копирует команду запуска в буфер → вставь в PowerShell (Win+R → powershell) или запусти файл двойным кликом из Explorer.</p>
+</section>
+
+<section>
+  <h2>Credentials</h2>
+  <div class="creds">
+
+    <div class="cred-row">
+      <span class="cred-label">VPS SSH</span>
+      <span class="cred-value">YOUR_VPS_IP · порт YOUR_PORT · root</span>
+      <button class="copy-btn" onclick="copy('ssh -p YOUR_PORT -i YOUR_KEY root@YOUR_VPS_IP'); event.stopPropagation()">copy</button>
+    </div>
+
+    <div class="cred-row">
+      <span class="cred-label">SSH key</span>
+      <span class="cred-value">YOUR_KEY_PATH</span>
+    </div>
+
+    <div class="cred-row">
+      <span class="cred-label">GitHub репо</span>
+      <span class="cred-value">YOUR_ORG/YOUR_REPO</span>
+    </div>
+
+    <div class="cred-row">
+      <span class="cred-label">VPS app path</span>
+      <span class="cred-value">/opt/p2p-system</span>
+      <button class="copy-btn" onclick="copy('/opt/p2p-system'); event.stopPropagation()">copy</button>
+    </div>
+
+    <div class="cred-row">
+      <span class="cred-label">API_KEY (prod)</span>
+      <span class="cred-value secret">(вставь из config/.env)</span>
+    </div>
+
+    <div class="cred-row">
+      <span class="cred-label">VITE_API_KEY</span>
+      <span class="cred-value secret">(вставь из frontend/.env)</span>
+    </div>
+
+    <div class="cred-row">
+      <span class="cred-label">VPS panel пароль</span>
+      <span class="cred-value placeholder">(впиши вручную)</span>
+    </div>
+
+    <div class="cred-row">
+      <span class="cred-label">HostZealot акк</span>
+      <span class="cred-value placeholder">(впиши вручную)</span>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2>Команды для VPS (клик = копировать)</h2>
+  <div class="cmds">
+
+    <div class="cmd-row" onclick="copy('systemctl status p2p-tracker p2p-api')">
+      <span class="cmd-label">статус</span>
+      <span class="cmd-text">systemctl status p2p-tracker p2p-api</span>
+      <button class="copy-btn">copy</button>
+    </div>
+
+    <div class="cmd-row" onclick="copy('journalctl -u p2p-tracker -n 50 --no-pager')">
+      <span class="cmd-label">логи трекер</span>
+      <span class="cmd-text">journalctl -u p2p-tracker -n 50 --no-pager</span>
+      <button class="copy-btn">copy</button>
+    </div>
+
+    <div class="cmd-row" onclick="copy('journalctl -u p2p-api -n 50 --no-pager')">
+      <span class="cmd-label">логи api</span>
+      <span class="cmd-text">journalctl -u p2p-api -n 50 --no-pager</span>
+      <button class="copy-btn">copy</button>
+    </div>
+
+    <div class="cmd-row" onclick="copy('systemctl restart p2p-tracker p2p-api')">
+      <span class="cmd-label">рестарт</span>
+      <span class="cmd-text">systemctl restart p2p-tracker p2p-api</span>
+      <button class="copy-btn">copy</button>
+    </div>
+
+    <div class="cmd-row" onclick="copy(&quot;sqlite3 /opt/p2p-system/data/p2p.db 'SELECT COUNT(*) FROM snapshots;'&quot;)">
+      <span class="cmd-label">снапшоты</span>
+      <span class="cmd-text">sqlite3 /opt/p2p-system/data/p2p.db 'SELECT COUNT(*) FROM snapshots;'</span>
+      <button class="copy-btn">copy</button>
+    </div>
+
+    <div class="cmd-row" onclick="copy(&quot;sqlite3 /opt/p2p-system/data/p2p.db 'SELECT COUNT(*) FROM orders;'&quot;)">
+      <span class="cmd-label">ордера</span>
+      <span class="cmd-text">sqlite3 /opt/p2p-system/data/p2p.db 'SELECT COUNT(*) FROM orders;'</span>
+      <button class="copy-btn">copy</button>
+    </div>
+
+    <div class="cmd-row" onclick="copy('cd /opt/p2p-system && sudo -u p2p git log --oneline -5')">
+      <span class="cmd-label">git log VPS</span>
+      <span class="cmd-text">cd /opt/p2p-system && sudo -u p2p git log --oneline -5</span>
+      <button class="copy-btn">copy</button>
+    </div>
+
+    <div class="cmd-row" onclick="copy('tail -f /opt/p2p-system/logs/errors.log')">
+      <span class="cmd-label">errors.log</span>
+      <span class="cmd-text">tail -f /opt/p2p-system/logs/errors.log</span>
+      <button class="copy-btn">copy</button>
+    </div>
+
+  </div>
+</section>
+
+<div class="toast" id="toast">Скопировано!</div>
+
+<script>
+// ЗАМЕНИ ЭТУ СТРОКУ на путь к твоему проекту
+const PROJECT = 'C:\\Users\\YOUR_USERNAME\\p2p-system';
+let toastTimeout;
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg || 'Скопировано!';
+  t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function copy(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('Скопировано!'));
+}
+
+function runBat(name) {
+  const cmd = 'start "" "' + PROJECT + '\\' + name + '"';
+  navigator.clipboard.writeText(cmd).then(() =>
+    showToast('Скопировано! Вставь в PowerShell или Win+R')
+  );
+}
+</script>
+
+</body>
+</html>

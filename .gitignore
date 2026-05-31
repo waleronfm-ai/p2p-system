@@ -8,6 +8,7 @@ logs/*.log
 logs/*.png
 .DS_Store
 .claude/
+panel.html
 # Playwright MCP artifacts
 .playwright-mcp/
 screenshot_*.png
