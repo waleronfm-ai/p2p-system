@@ -57,12 +57,12 @@
   - 4В — таблица ордеров с цветной разметкой банков, метками надёжности мейкеров, пагинацией
   - Полировка: выравнивание высот блоков (items-start), отключение автоперевода Chrome (translate="no" + notranslate meta)
   - scripts/start_frontend.bat — запуск Vite dev server (fallback)
-- **Шаг 5 (в работе):** Trade Journal
-  - ✅ 5А — бэкенд: модель Trade (core/database/models.py), 5 endpoints в api/routers/trades.py:
+- **Шаг 5 завершён:** Trade Journal
+  - 5А — бэкенд: модель Trade (core/database/models.py), 5 endpoints в api/routers/trades.py:
     POST /api/trades, GET /api/trades (с фильтрами), GET /api/trades/stats, GET /api/trades/{id}, DELETE /api/trades/{id}
-  - ✅ 5Б — фронтенд: TradesHistory (таблица сделок, UTC→Kyiv), AddTradeModal (textarea → парсер → превью → сохранение),
+  - 5Б — фронтенд: TradesHistory (таблица сделок, UTC→Kyiv), AddTradeModal (textarea → парсер → превью → сохранение),
     binanceParser.ts (парсит текст страницы сделки Binance, конвертирует время Kyiv→UTC)
-  - ✅ 5В — страница статистики: react-router-dom, Header с NavLink, pages/Dashboard, pages/Statistics
+  - 5В — страница статистики: react-router-dom, Header с NavLink, pages/Dashboard, pages/Statistics
     Статистика: селектор периода (7д/30д/всё время), карточка P&L, сетка 4 метрик, заглушка при 0 сделок
 - **Шаг 7А завершён:** GET /api/market/opportunities — поиск выгодных ордеров по позиции
   - api/services/market_service.py → get_opportunities(); api/routers/market.py → /opportunities
@@ -157,15 +157,16 @@ $env:PYTHONUTF8=1
 |------|-----------|--------|
 | Сборщик | Python + httpx + APScheduler | готов (Шаги 1–2) |
 | БД | SQLite → PostgreSQL, SQLAlchemy 2.0 | готов |
-| Бэкенд | FastAPI + uvicorn | готов (Шаг 3) |
-| Фронтенд | Vite + React + TypeScript + Tailwind + shadcn | готов (Шаг 4) |
+| Бэкенд | FastAPI + uvicorn | готов (Шаги 3, 7А, 8А) |
+| Фронтенд | Vite + React + TypeScript + Tailwind + shadcn | ⚠ частично сломан (Шаг 8Б в работе) |
+| Чарт библиотека | lightweight-charts v5 | планируется в Шаге 8Б (заменит Recharts) |
 | Trade Journal | учёт сделок, история P&L, статистика | готов (Шаг 5 полностью) |
 | Алерты | Telegram Bot API | планируется (Шаг 6) |
-| AI-агент | Claude API | планируется (Шаги 7А–7В) |
+| AI-агент | Claude API | планируется (Шаги 8В+) |
 
 ## Последний коммит
 
-`25fcce8 Step 5 part B: TradesHistory + AddTradeModal + Binance parser`
+`b526368 Feat: timeframe aggregation in chart API, return both BUY and SELL`
 
 ## Роадмап
 
@@ -177,9 +178,24 @@ $env:PYTHONUTF8=1
 - ✅ Шаг 7А — GET /api/market/opportunities с автоопределением режима по позиции
 - ✅ Шаг 7Б — визуализация точек возможностей на графике (DotsLayer + OppTooltip)
 - ✅ Шаг 7В — фильтр объёма + двойная линия рынка + маркеры сделок на графике (TradesLayer + TradeTooltip)
+- ✅ Шаг 8А — агрегация графика по таймфреймам + обе стороны рынка одновременно (коммит b526368)
+  - GET /api/market/chart: новый endpoint, params: pair / exchange / timeframe (24h|7d|1m|3m|6m|1y)
+    → ChartAggResponse: {timeframe, points:[{ts,buy_price,sell_price,buy_p25,buy_p75,sell_p25,sell_p75}], insufficient_data}
+  - GET /api/market/timeframes: доступные ТФ по span истории → {available, disabled}
+  - Агрегация: SQLite strftime('%s') → Unix-бакеты; медиана и p25/p75 — Python statistics.median/quantiles
+  - Шаг бакета: 24h→5мин, 7d→30мин, 1m→2ч, 3m→6ч, 6m→12ч, 1y→1день
+  - insufficient_data: true когда точек < 10 или БД пустая; ts — UNIX-секунды UTC (не миллисекунды)
+  - ⚠ Фронт СЛОМАН: PriceChart.tsx использует старый формат (mode/price/timestamp) — чинится в 8Б
+  - ⚠ Известное узкое место: медиана тянет все сырые цены в память Python; при очень длинных ТФ
+    план Б — snapshots_hourly (агрегированные снапшоты), но сейчас не критично
+- ⬜ Шаг 8Б (СЛЕДУЮЩИЙ) — переписать PriceChart.tsx под новый API + lightweight-charts v5
+  - Принятые решения: ставим lightweight-charts v5 (не v4)
+  - Синтаксис v5: chart.addSeries(LineSeries), createSeriesMarkers() вместо deprecated setMarkers()
+  - Фронт должен получать {ts, buy_price, sell_price} и рисовать две линии (BUY зелёная, SELL красная)
+  - Селектор таймфрейма: чипы 24h / 7д / 1м / 3м / 6м / 1г; недоступные задизаблены по /timeframes
 - ⬜ Шаг 6 — Telegram-алерты (пороговые уведомления по цене/спреду)
-- ⬜ Шаг 7В — AI-Предсказатель с самообучением
-- ⬜ Шаг 8 — Связки (USDT/USDC, межбиржевые)
+- ⬜ Шаг 8В — AI-Предсказатель с самообучением
+- ⬜ Шаг 9 — Связки (USDT/USDC, межбиржевые)
 
 ## Workflow импорта сделок (Trade Journal)
 
