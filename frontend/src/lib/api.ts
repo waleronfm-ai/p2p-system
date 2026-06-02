@@ -202,6 +202,47 @@ export async function fetchOpportunities(
 }
 
 // ---------------------------------------------------------------------------
+// Chart aggregated — Шаг 8А/8Б
+// ---------------------------------------------------------------------------
+
+export interface ChartPointAgg {
+  ts: number
+  buy_price: number
+  sell_price: number
+  buy_p25?: number | null
+  buy_p75?: number | null
+  sell_p25?: number | null
+  sell_p75?: number | null
+}
+
+export interface ChartAggResponse {
+  timeframe: string
+  points: ChartPointAgg[]
+  insufficient_data: boolean
+}
+
+export interface TimeframesResponse {
+  available: string[]
+  disabled: string[]
+}
+
+export async function fetchChartAgg(
+  exchange: string,
+  pair: string,
+  timeframe: string,
+): Promise<ChartAggResponse> {
+  const { data } = await api.get<ChartAggResponse>('/api/market/chart', {
+    params: { exchange, pair, timeframe },
+  })
+  return data
+}
+
+export async function fetchTimeframes(): Promise<TimeframesResponse> {
+  const { data } = await api.get<TimeframesResponse>('/api/market/timeframes')
+  return data
+}
+
+// ---------------------------------------------------------------------------
 // Tracker Health (Шаг 8А)
 // ---------------------------------------------------------------------------
 
