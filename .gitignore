@@ -12,3 +12,4 @@ panel.html
 # Playwright MCP artifacts
 .playwright-mcp/
 screenshot_*.png
+verify-*.png
