@@ -230,10 +230,11 @@ export async function fetchChartAgg(
   exchange: string,
   pair: string,
   timeframe: string,
+  volumeUah?: number,
 ): Promise<ChartAggResponse> {
-  const { data } = await api.get<ChartAggResponse>('/api/market/chart', {
-    params: { exchange, pair, timeframe },
-  })
+  const params: Record<string, unknown> = { exchange, pair, timeframe }
+  if (volumeUah !== undefined) params.volume_uah = volumeUah
+  const { data } = await api.get<ChartAggResponse>('/api/market/chart', { params })
   return data
 }
 

@@ -65,13 +65,14 @@ def chart(
     pair: str = Query("USDT/UAH", description="Пара: USDT/UAH, USDC/UAH"),
     exchange: str = Query("binance", description="binance или bybit"),
     timeframe: str = Query("24h", description="Таймфрейм: 24h, 7d, 1m, 3m, 6m, 1y"),
+    volume_uah: float | None = Query(None, gt=0, description="Фильтр объёма сделки в UAH: учитываются только ордера где min_amount ≤ volume_uah"),
 ):
     if timeframe not in _TIMEFRAME_CONFIG:
         raise HTTPException(422, detail=f"timeframe must be one of: {', '.join(_TIMEFRAME_CONFIG)}")
     if exchange not in ("binance", "bybit"):
         raise HTTPException(422, detail="exchange must be 'binance' or 'bybit'")
     try:
-        return get_chart_agg(pair=pair, timeframe=timeframe, exchange=exchange)
+        return get_chart_agg(pair=pair, timeframe=timeframe, exchange=exchange, volume_uah=volume_uah)
     except ValueError as exc:
         raise HTTPException(422, detail=str(exc))
 

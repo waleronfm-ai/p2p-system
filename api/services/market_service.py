@@ -513,6 +513,7 @@ def get_chart_agg(
     pair: str,
     timeframe: str,
     exchange: str,
+    volume_uah: float | None = None,
 ) -> ChartAggResponse:
     if timeframe not in _TIMEFRAME_CONFIG:
         raise ValueError(f"timeframe must be one of: {', '.join(_TIMEFRAME_CONFIG)}")
@@ -532,7 +533,8 @@ def get_chart_agg(
                 SELECT
                     {bucket_expr} AS bucket,
                     s.trade_type,
-                    o.price
+                    o.price,
+                    o.min_amount
                 FROM snapshots s
                 JOIN orders o ON o.snapshot_id = s.id
                 WHERE s.exchange = :exchange
@@ -546,7 +548,9 @@ def get_chart_agg(
 
     # Группируем цены по (bucket_ts, trade_type); bucket — уже Unix-секунды UTC
     bucket_prices: dict[tuple[int, str], list[float]] = defaultdict(list)
-    for bucket, trade_type, price in rows:
+    for bucket, trade_type, price, min_amount in rows:
+        if volume_uah is not None and min_amount > volume_uah:
+            continue
         bucket_prices[(int(bucket), trade_type)].append(float(price))
 
     # Вычисляем медиану и перцентили в Python (true median, не AVG)
