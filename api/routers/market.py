@@ -2,8 +2,25 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
 
-from api.schemas import ChartResponse, MarketOrder, OpportunitiesResponse, OutliersResponse, SummaryResponse
-from api.services.market_service import get_chart, get_opportunities, get_orders, get_outliers, get_summary
+from api.schemas import (
+    ChartAggResponse,
+    ChartResponse,
+    MarketOrder,
+    OpportunitiesResponse,
+    OutliersResponse,
+    SummaryResponse,
+    TimeframesResponse,
+)
+from api.services.market_service import (
+    get_chart,
+    get_chart_agg,
+    get_opportunities,
+    get_orders,
+    get_outliers,
+    get_summary,
+    get_timeframes,
+    _TIMEFRAME_CONFIG,
+)
 
 router = APIRouter(prefix="/market")
 
@@ -43,23 +60,25 @@ def orders(
         raise HTTPException(422, detail=str(exc))
 
 
-@router.get("/chart", response_model=ChartResponse, summary="Данные для графика цены")
+@router.get("/chart", response_model=ChartAggResponse, summary="Агрегированный график цены (BUY + SELL)")
 def chart(
-    pair: str = Query(..., description="Пара: USDT/UAH, USDC/UAH"),
-    mode: str = Query(..., description="buy или sell"),
-    exchange: str = Query(..., description="binance или bybit"),
-    hours: int = Query(24, ge=1, le=8760, description="Глубина в часах (по умолчанию 24)"),
-    raw: bool = Query(False, description="Сырые цены без фильтрации выбросов"),
-    volume_uah: float | None = Query(None, gt=0, description="Объём сделки в UAH: фильтр ордеров где min_amount ≤ volume_uah"),
+    pair: str = Query("USDT/UAH", description="Пара: USDT/UAH, USDC/UAH"),
+    exchange: str = Query("binance", description="binance или bybit"),
+    timeframe: str = Query("24h", description="Таймфрейм: 24h, 7d, 1m, 3m, 6m, 1y"),
 ):
-    if mode.lower() not in ("buy", "sell"):
-        raise HTTPException(422, detail="mode must be 'buy' or 'sell'")
+    if timeframe not in _TIMEFRAME_CONFIG:
+        raise HTTPException(422, detail=f"timeframe must be one of: {', '.join(_TIMEFRAME_CONFIG)}")
     if exchange not in ("binance", "bybit"):
         raise HTTPException(422, detail="exchange must be 'binance' or 'bybit'")
     try:
-        return get_chart(pair=pair, mode=mode, exchange=exchange, hours=hours, raw=raw, volume_uah=volume_uah)
+        return get_chart_agg(pair=pair, timeframe=timeframe, exchange=exchange)
     except ValueError as exc:
         raise HTTPException(422, detail=str(exc))
+
+
+@router.get("/timeframes", response_model=TimeframesResponse, summary="Доступные таймфреймы по объёму истории")
+def timeframes():
+    return get_timeframes()
 
 
 @router.get("/opportunities", response_model=OpportunitiesResponse, summary="Выгодные ордера с учётом позиции")

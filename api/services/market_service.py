@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 from itertools import groupby as _groupby
 
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 
 from core.banks.registry import (
     RiskLevel,
@@ -22,7 +22,9 @@ from core.utils.outliers import filter_outliers
 
 from api.schemas import (
     BankInfo,
+    ChartAggResponse,
     ChartPoint,
+    ChartPointAgg,
     ChartResponse,
     MakerInfo,
     MarketOrder,
@@ -33,6 +35,7 @@ from api.schemas import (
     PairSummary,
     SpreadInfo,
     SummaryResponse,
+    TimeframesResponse,
 )
 
 # ── Opportunities constants ───────────────────────────────────────────────────
@@ -46,6 +49,25 @@ _TRUST_PRIORITY = {
     TrustLevel.NORMAL:  2,
     TrustLevel.NOVICE:  1,
     TrustLevel.UNKNOWN: 0,
+}
+
+# ── Timeframe aggregation constants ──────────────────────────────────────────
+_TIMEFRAME_CONFIG: dict[str, dict] = {
+    "24h": {"hours": 24,   "bucket_minutes": 5},
+    "7d":  {"hours": 168,  "bucket_minutes": 30},
+    "1m":  {"hours": 720,  "bucket_minutes": 120},
+    "3m":  {"hours": 2160, "bucket_minutes": 360},
+    "6m":  {"hours": 4320, "bucket_minutes": 720},
+    "1y":  {"hours": 8760, "bucket_minutes": 1440},
+}
+
+_TIMEFRAME_MIN_DAYS: dict[str, int] = {
+    "24h": 0,
+    "7d":  7,
+    "1m":  30,
+    "3m":  90,
+    "6m":  180,
+    "1y":  365,
 }
 
 
@@ -478,6 +500,116 @@ def get_chart(
         points=points,
         total_points=len(points),
     )
+
+
+def _bucket_sql(bucket_minutes: int) -> str:
+    """Возвращает SQLite-выражение: Unix-timestamp начала бакета (UTC, целое число)."""
+    bucket_seconds = bucket_minutes * 60
+    # strftime('%s', ...) возвращает Unix-timestamp строкой; делим и умножаем для выравнивания
+    return f"(CAST(strftime('%s', s.collected_at) AS INTEGER) / {bucket_seconds} * {bucket_seconds})"
+
+
+def get_chart_agg(
+    pair: str,
+    timeframe: str,
+    exchange: str,
+) -> ChartAggResponse:
+    if timeframe not in _TIMEFRAME_CONFIG:
+        raise ValueError(f"timeframe must be one of: {', '.join(_TIMEFRAME_CONFIG)}")
+
+    parts = pair.upper().split("/")
+    if len(parts) != 2:
+        raise ValueError(f"Invalid pair format: {pair!r}")
+    asset, fiat = parts
+
+    cfg = _TIMEFRAME_CONFIG[timeframe]
+    cut = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=cfg["hours"])
+    bucket_expr = _bucket_sql(cfg["bucket_minutes"])
+
+    with get_session() as session:
+        rows = session.execute(
+            text(f"""
+                SELECT
+                    {bucket_expr} AS bucket,
+                    s.trade_type,
+                    o.price
+                FROM snapshots s
+                JOIN orders o ON o.snapshot_id = s.id
+                WHERE s.exchange = :exchange
+                  AND s.asset   = :asset
+                  AND s.fiat    = :fiat
+                  AND s.collected_at >= :cut
+                ORDER BY bucket, s.trade_type, o.price
+            """),
+            {"exchange": exchange, "asset": asset, "fiat": fiat, "cut": cut},
+        ).all()
+
+    # Группируем цены по (bucket_ts, trade_type); bucket — уже Unix-секунды UTC
+    bucket_prices: dict[tuple[int, str], list[float]] = defaultdict(list)
+    for bucket, trade_type, price in rows:
+        bucket_prices[(int(bucket), trade_type)].append(float(price))
+
+    # Вычисляем медиану и перцентили в Python (true median, не AVG)
+    bucket_stats: dict[int, dict[str, dict]] = defaultdict(dict)
+    for (bucket_ts, trade_type), prices in bucket_prices.items():
+        prices.sort()
+        median_price = _stats.median(prices)
+        p25_val: float | None = None
+        p75_val: float | None = None
+        if len(prices) >= 4:
+            qs = _stats.quantiles(prices, n=4)
+            p25_val = round(qs[0], 4)
+            p75_val = round(qs[2], 4)
+        bucket_stats[bucket_ts][trade_type] = {
+            "price": round(median_price, 4),
+            "p25": p25_val,
+            "p75": p75_val,
+        }
+
+    # Объединяем BUY и SELL по бакету (только где оба есть); bucket_ts — уже готовый ts
+    points: list[ChartPointAgg] = []
+    for ts in sorted(bucket_stats):
+        stats = bucket_stats[ts]
+        if "BUY" not in stats or "SELL" not in stats:
+            continue
+        points.append(ChartPointAgg(
+            ts=ts,
+            buy_price=stats["BUY"]["price"],
+            sell_price=stats["SELL"]["price"],
+            buy_p25=stats["BUY"]["p25"],
+            buy_p75=stats["BUY"]["p75"],
+            sell_p25=stats["SELL"]["p25"],
+            sell_p75=stats["SELL"]["p75"],
+        ))
+
+    insufficient = len(points) < 10
+    return ChartAggResponse(
+        timeframe=timeframe,
+        points=[] if insufficient else points,
+        insufficient_data=insufficient,
+    )
+
+
+def get_timeframes() -> TimeframesResponse:
+    with get_session() as session:
+        row = session.execute(
+            select(
+                func.min(Snapshot.collected_at).label("min_at"),
+                func.max(Snapshot.collected_at).label("max_at"),
+            )
+        ).one()
+
+    if row.min_at is None or row.max_at is None:
+        return TimeframesResponse(available=[], disabled=list(_TIMEFRAME_CONFIG.keys()))
+
+    span_days = (row.max_at - row.min_at).total_seconds() / 86400
+
+    available: list[str] = []
+    disabled: list[str] = []
+    for tf, min_days in _TIMEFRAME_MIN_DAYS.items():
+        (available if span_days >= min_days else disabled).append(tf)
+
+    return TimeframesResponse(available=available, disabled=disabled)
 
 
 def _load_position() -> tuple[float, float | None]:

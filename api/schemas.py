@@ -125,6 +125,30 @@ class ChartResponse(BaseModel):
     total_points: int
 
 
+class ChartPointAgg(BaseModel):
+    """Агрегированная точка графика: обе стороны рынка за временное окно."""
+    ts: int = Field(..., description="UNIX-секунды UTC")
+    buy_price: float = Field(..., description="Медиана BUY-ордеров в окне")
+    sell_price: float = Field(..., description="Медиана SELL-ордеров в окне")
+    buy_p25: float | None = None
+    buy_p75: float | None = None
+    sell_p25: float | None = None
+    sell_p75: float | None = None
+
+
+class ChartAggResponse(BaseModel):
+    """Агрегированный график с обеими сторонами рынка."""
+    timeframe: str
+    points: list[ChartPointAgg]
+    insufficient_data: bool
+
+
+class TimeframesResponse(BaseModel):
+    """Доступные таймфреймы по объёму истории."""
+    available: list[str]
+    disabled: list[str]
+
+
 # ---------------------------------------------------------------------------
 # Trade Journal
 # ---------------------------------------------------------------------------
