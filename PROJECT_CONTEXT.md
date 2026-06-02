@@ -178,24 +178,23 @@ $env:PYTHONUTF8=1
 - ✅ Шаг 7А — GET /api/market/opportunities с автоопределением режима по позиции
 - ✅ Шаг 7Б — визуализация точек возможностей на графике (DotsLayer + OppTooltip)
 - ✅ Шаг 7В — фильтр объёма + двойная линия рынка + маркеры сделок на графике (TradesLayer + TradeTooltip)
-- ✅ Шаг 8А — агрегация графика по таймфреймам + обе стороны рынка одновременно (коммит b526368)
-  - GET /api/market/chart: новый endpoint, params: pair / exchange / timeframe (24h|7d|1m|3m|6m|1y)
-    → ChartAggResponse: {timeframe, points:[{ts,buy_price,sell_price,buy_p25,buy_p75,sell_p25,sell_p75}], insufficient_data}
-  - GET /api/market/timeframes: доступные ТФ по span истории → {available, disabled}
-  - Агрегация: SQLite strftime('%s') → Unix-бакеты; медиана и p25/p75 — Python statistics.median/quantiles
-  - Шаг бакета: 24h→5мин, 7d→30мин, 1m→2ч, 3m→6ч, 6m→12ч, 1y→1день
-  - insufficient_data: true когда точек < 10 или БД пустая; ts — UNIX-секунды UTC (не миллисекунды)
-  - ⚠ Фронт СЛОМАН: PriceChart.tsx использует старый формат (mode/price/timestamp) — чинится в 8Б
-  - ⚠ Известное узкое место: медиана тянет все сырые цены в память Python; при очень длинных ТФ
-    план Б — snapshots_hourly (агрегированные снапшоты), но сейчас не критично
-- ⬜ Шаг 8Б (СЛЕДУЮЩИЙ) — переписать PriceChart.tsx под новый API + lightweight-charts v5
-  - Принятые решения: ставим lightweight-charts v5 (не v4)
-  - Синтаксис v5: chart.addSeries(LineSeries), createSeriesMarkers() вместо deprecated setMarkers()
-  - Фронт должен получать {ts, buy_price, sell_price} и рисовать две линии (BUY зелёная, SELL красная)
-  - Селектор таймфрейма: чипы 24h / 7д / 1м / 3м / 6м / 1г; недоступные задизаблены по /timeframes
-- ⬜ Шаг 6 — Telegram-алерты (пороговые уведомления по цене/спреду)
-- ⬜ Шаг 8В — AI-Предсказатель с самообучением
-- ⬜ Шаг 9 — Связки (USDT/USDC, межбиржевые)
+- ✅ Шаг 8А — агрегация графика по таймфреймам + обе стороны рынка одновременно (b526368)
+- ✅ Шаг 8Б — PriceChart.tsx переписан на lightweight-charts v5: две линии BUY/SELL, сглаживание Curved, таймфреймы, ResizeObserver
+- ✅ Удаление сделок — кнопка корзины + AlertDialog подтверждения в блоке История (fcdef7c)
+- ✅ Шаг 8В часть 1 — фильтр `volume_uah` на графике (VPS), тумблеры слоёв (Сделки ON / Коридор+Возможности disabled-каркас), метки сделок `createSeriesMarkers` v5, тултип по `hoveredObjectId` (ad3c752)
+  - ⚠ Хвост: метки сделок не проверены вживую — журнал пуст. Проверить при первой сделке.
+  - ⚠ Про фильтр объёма: высокий volume = меньше ордеров = БОЛЬШЕ шума. Фильтр — «рынок для моих сумм», не инструмент сглаживания.
+
+### Следующее — 8В часть 2
+- Полоса-коридор buy_p25/p75 и sell_p25/p75 ЗАЛИВКОЙ (не линиями), тумблер «Коридор»
+- Слой opportunities (точки), тумблер «Возможности»
+- Тултипы при наведении (цена/объём/банк/дата Киев)
+
+### Далее (по приоритету)
+- Торговые сессии: стартовый капитал, привязка сделок к сессии, отчёт P&L на закрытии, таблица `sessions` + `session_id` в `trades`
+- Telegram-алерты (пороговые уведомления по цене/спреду)
+- Миграция SQLite → PostgreSQL
+- Шаг 9 — AI-агент: сначала аналитик-комментатор (Anthropic API), потом tool use
 
 ## Workflow импорта сделок (Trade Journal)
 
