@@ -34,6 +34,12 @@ export function Header() {
           >
             Статистика
           </NavLink>
+          <NavLink
+            to="/faq"
+            style={({ isActive }) => ({ color: isActive ? 'var(--accent)' : 'var(--muted)', textDecoration: 'none', fontWeight: 500 })}
+          >
+            FAQ
+          </NavLink>
         </nav>
       </div>
 
