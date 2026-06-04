@@ -8,11 +8,15 @@ import {
 } from 'lightweight-charts'
 import {
   fetchChartAgg,
+  fetchOpportunities,
   fetchTimeframes,
   fetchTrades,
   type ChartPointAgg,
+  type Opportunity,
   type Trade,
 } from '../lib/api'
+import { BandPrimitive } from '../lib/BandPrimitive'
+import { OpportunitiesPrimitive } from '../lib/OpportunitiesPrimitive'
 
 type Exchange = 'binance' | 'bybit'
 type Timeframe = '24h' | '7d' | '1m' | '3m' | '6m' | '1y'
@@ -115,6 +119,9 @@ export function PriceChart() {
   const sellRef    = useRef<any>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<any>(null)       // createSeriesMarkers plugin
+  const bandRef    = useRef<BandPrimitive | null>(null)
+  const oppsRef    = useRef<Opportunity[]>([])   // текущие возможности (для crosshairMoved)
+  const oppsPrimRef = useRef<OpportunitiesPrimitive | null>(null)
   const tradesRef  = useRef<Trade[]>([])     // текущие сделки (для crosshairMoved)
   const tooltipRef = useRef<HTMLDivElement>(null)
 
@@ -129,7 +136,9 @@ export function PriceChart() {
   const [disabled,  setDisabled]  = useState<string[]>([])
 
   // Тумблеры слоёв
-  const [showTrades, setShowTrades] = useState(true)
+  const [showTrades,       setShowTrades]       = useState(true)
+  const [showBand,         setShowBand]         = useState(false)
+  const [showOpportunities, setShowOpportunities] = useState(false)
 
   // Фильтр объёма (дефолт 5k ₴ — для чистоты графика)
   const [volumeChip, setVolumeChip] = useState<number | null>(5_000)
@@ -181,11 +190,21 @@ export function PriceChart() {
       title: 'Продажа',
     })
 
+    // Примитив полосы-коридора 25/75
+    const band = new BandPrimitive()
+    buy.attachPrimitive(band)
+    bandRef.current = band
+
+    // Примитив возможностей
+    const opps = new OpportunitiesPrimitive()
+    sell.attachPrimitive(opps)
+    oppsPrimRef.current = opps
+
     // Плагин маркеров на серии покупки
     const markers = createSeriesMarkers(buy, [])
     markersRef.current = markers
 
-    // Тултип при наведении на маркер через hoveredObjectId
+    // Тултип при наведении на маркер / возможность через hoveredObjectId
     chart.subscribeCrosshairMove((params) => {
       if (!tooltipRef.current) return
 
@@ -195,6 +214,38 @@ export function PriceChart() {
         return
       }
 
+      const idStr = String(markerId)
+      const containerW = containerRef.current?.clientWidth ?? 400
+      const tooltipW   = 240
+
+      // ── Тултип возможности ──────────────────────────────────────────────
+      if (idStr.startsWith('opp-')) {
+        const idx = parseInt(idStr.slice(4))
+        const opp = oppsRef.current[idx]
+        if (!opp) { tooltipRef.current.style.display = 'none'; return }
+
+        const profitSign  = opp.profit_per_usdt >= 0 ? '+' : ''
+        const profitColor = opp.profit_per_usdt >= 0 ? '#22C55E' : '#EF4444'
+        const bankNames   = opp.banks.map((b) => b.name).join(', ') || '—'
+
+        tooltipRef.current.innerHTML = [
+          `<div style="font-weight:600;margin-bottom:4px">${opp.maker.nickname}</div>`,
+          `<div>Цена: <strong>${opp.price.toFixed(2)} ₴</strong></div>`,
+          `<div>Объём: ${opp.available_amount.toLocaleString('ru-UA', { maximumFractionDigits: 0 })} USDT</div>`,
+          `<div>Лимиты: ${opp.min_amount.toLocaleString('ru-UA', { maximumFractionDigits: 0 })}–${opp.max_amount.toLocaleString('ru-UA', { maximumFractionDigits: 0 })} ₴</div>`,
+          `<div>Банки: ${bankNames}</div>`,
+          `<div style="font-weight:600;color:${profitColor};margin-top:6px">${profitSign}${opp.profit_per_usdt.toFixed(2)} ₴/USDT</div>`,
+        ].join('')
+
+        let left = params.point.x + 14
+        if (left + tooltipW > containerW) left = params.point.x - tooltipW - 14
+        tooltipRef.current.style.left = `${left}px`
+        tooltipRef.current.style.top  = `${Math.max(0, params.point.y - 50)}px`
+        tooltipRef.current.style.display = 'block'
+        return
+      }
+
+      // ── Тултип сделки ───────────────────────────────────────────────────
       const trade = tradesRef.current.find((t) => String(t.id) === String(markerId))
       if (!trade) {
         tooltipRef.current.style.display = 'none'
@@ -216,8 +267,6 @@ export function PriceChart() {
         `<div style="color:var(--muted);font-size:11px;margin-top:4px">${dateStr}</div>`,
       ].join('')
 
-      const containerW = containerRef.current?.clientWidth ?? 400
-      const tooltipW   = 220
       let left = params.point.x + 14
       if (left + tooltipW > containerW) left = params.point.x - tooltipW - 14
       tooltipRef.current.style.left = `${left}px`
@@ -238,10 +287,12 @@ export function PriceChart() {
     return () => {
       observer.disconnect()
       chart.remove()
-      chartRef.current  = null
-      buyRef.current    = null
-      sellRef.current   = null
+      chartRef.current   = null
+      buyRef.current     = null
+      sellRef.current    = null
       markersRef.current = null
+      bandRef.current    = null
+      oppsPrimRef.current = null
     }
   }, [])
 
@@ -254,6 +305,7 @@ export function PriceChart() {
       sellRef.current.setData([])
       setLastBuy(null)
       setLastSell(null)
+      bandRef.current?.updateData([])
       return
     }
 
@@ -263,6 +315,9 @@ export function PriceChart() {
     const last = points[points.length - 1]
     setLastBuy(last.buy_price)
     setLastSell(last.sell_price)
+
+    bandRef.current?.updateData(points)
+    bandRef.current?.requestUpdate()
   }, [])
 
   // ── Загрузка данных графика ───────────────────────────────────────────────
@@ -312,6 +367,45 @@ export function PriceChart() {
     const id = setInterval(load, 60_000)
     return () => clearInterval(id)
   }, [exchange])
+
+  // ── Тумблер коридора 25/75 ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!bandRef.current) return
+    bandRef.current.setVisible(showBand)
+    bandRef.current.requestUpdate()
+  }, [showBand])
+
+  // ── Загрузка и управление возможностями ──────────────────────────────────
+  useEffect(() => {
+    if (!showOpportunities) {
+      oppsRef.current = []
+      oppsPrimRef.current?.updateData([])
+      oppsPrimRef.current?.setVisible(false)
+      oppsPrimRef.current?.requestUpdate()
+      return
+    }
+
+    const load = () => {
+      fetchOpportunities(exchange, 'USDT/UAH', volumeChip ?? undefined)
+        .then((res) => {
+          oppsRef.current = res.opportunities
+          oppsPrimRef.current?.updateData(res.opportunities)
+          oppsPrimRef.current?.setVisible(true)
+          oppsPrimRef.current?.requestUpdate()
+        })
+        .catch(() => {})
+    }
+    load()
+    const id = setInterval(load, 60_000)
+    return () => clearInterval(id)
+  }, [showOpportunities, exchange, volumeChip])
+
+  // ── Тумблер возможностей ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!oppsPrimRef.current) return
+    oppsPrimRef.current.setVisible(showOpportunities)
+    oppsPrimRef.current.requestUpdate()
+  }, [showOpportunities])
 
   // ── Применение маркеров сделок ────────────────────────────────────────────
   useEffect(() => {
@@ -454,15 +548,13 @@ export function PriceChart() {
           />
           <Chip
             label="Коридор"
-            active={false}
-            disabled
-            title="Скоро"
+            active={showBand}
+            onClick={() => setShowBand((v) => !v)}
           />
           <Chip
             label="Возможности"
-            active={false}
-            disabled
-            title="Скоро"
+            active={showOpportunities}
+            onClick={() => setShowOpportunities((v) => !v)}
           />
         </div>
       </div>
