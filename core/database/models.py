@@ -66,6 +66,24 @@ class Order(Base):
     maker: Mapped["Maker"] = relationship(back_populates="orders")
 
 
+class Session(Base):
+    __tablename__ = "sessions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    number: Mapped[int] = mapped_column(Integer, nullable=False)
+    start_capital_uah: Mapped[float] = mapped_column(Float, nullable=False)
+    exchange: Mapped[str] = mapped_column(String(20), nullable=False, default="binance")
+    status: Mapped[str] = mapped_column(String(10), nullable=False, default="active")
+    started_at: Mapped[datetime] = mapped_column(nullable=False, default=lambda: datetime.now(UTC))
+    closed_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    close_sell_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    realized_uah: Mapped[float | None] = mapped_column(Float, nullable=True)
+    unrealized_uah: Mapped[float | None] = mapped_column(Float, nullable=True)
+    usdt_remaining: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    trades: Mapped[list["Trade"]] = relationship(back_populates="session")
+
+
 class Trade(Base):
     __tablename__ = "trades"
     __table_args__ = (
@@ -85,3 +103,6 @@ class Trade(Base):
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     executed_at: Mapped[datetime] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC))
+    session_id: Mapped[int | None] = mapped_column(ForeignKey("sessions.id"), nullable=True)
+
+    session: Mapped["Session | None"] = relationship(back_populates="trades")
