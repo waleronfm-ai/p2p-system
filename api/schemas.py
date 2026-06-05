@@ -179,6 +179,7 @@ class TradeOut(BaseModel):
     note: str | None
     executed_at: datetime
     created_at: datetime
+    session_id: int | None = None
 
     model_config = {"from_attributes": True}
 
@@ -228,3 +229,33 @@ class OpportunitiesResponse(BaseModel):
     reference_price: float = Field(..., description="Опорная цена: медиана топ-5 для entry, break_even для exit")
     threshold_price: float = Field(..., description="Пороговая цена: entry — reference*(1 - discount%), exit — break_even + target_profit")
     opportunities: list[OpportunityItem]
+
+
+# ---------------------------------------------------------------------------
+# Trade Sessions (Шаг 9)
+# ---------------------------------------------------------------------------
+
+class SessionCreate(BaseModel):
+    start_capital_uah: float = Field(..., gt=0, description="Стартовый капитал в ₴")
+    exchange: str = Field("binance", description="binance / bybit")
+
+
+class SessionOut(BaseModel):
+    id: int
+    number: int
+    start_capital_uah: float
+    exchange: str
+    status: str = Field(..., description="active / closed")
+    started_at: datetime
+    closed_at: datetime | None = None
+    close_sell_price: float | None = None
+    realized_uah: float | None = None
+    unrealized_uah: float | None = None
+    usdt_remaining: float | None = None
+    trade_count: int = Field(0, description="Число сделок привязанных к сессии")
+
+    model_config = {"from_attributes": True}
+
+
+class SessionDetail(SessionOut):
+    trades: list[TradeOut] = Field(default_factory=list)

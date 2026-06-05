@@ -9,7 +9,7 @@ from core.utils.pnl import calc_realized_pnl
 
 from api.dependencies import require_api_key
 from api.schemas import TradeCreate, TradeOut, TradeStats
-from core.database import Trade, get_session
+from core.database import Session, Trade, get_session
 
 router = APIRouter(prefix="/trades", tags=["trades"])
 
@@ -22,22 +22,27 @@ def create_trade(body: TradeCreate):
     if body.exchange not in ("binance", "bybit"):
         raise HTTPException(422, detail="exchange must be 'binance' or 'bybit'")
 
-    trade = Trade(
-        exchange=body.exchange,
-        order_id=body.order_id,
-        trade_type=body.trade_type.upper(),
-        price=body.price,
-        amount_usdt=body.amount_usdt,
-        amount_uah=body.amount_uah,
-        bank=body.bank,
-        counterparty=body.counterparty,
-        note=body.note,
-        executed_at=body.executed_at,
-    )
-    with get_session() as session:
-        session.add(trade)
-        session.flush()
-        session.refresh(trade)
+    with get_session() as db:
+        active = db.scalars(
+            select(Session).where(Session.status == "active").limit(1)
+        ).first()
+
+        trade = Trade(
+            exchange=body.exchange,
+            order_id=body.order_id,
+            trade_type=body.trade_type.upper(),
+            price=body.price,
+            amount_usdt=body.amount_usdt,
+            amount_uah=body.amount_uah,
+            bank=body.bank,
+            counterparty=body.counterparty,
+            note=body.note,
+            executed_at=body.executed_at,
+            session_id=active.id if active else None,
+        )
+        db.add(trade)
+        db.flush()
+        db.refresh(trade)
         return TradeOut.model_validate(trade)
 
 
