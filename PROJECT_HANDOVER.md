@@ -1,7 +1,7 @@
 # P2P System — Полное описание рабочей среды
 
-**Дата составления:** 31 мая 2026 (обновлено 4 июня 2026)
-**Состояние:** Production на VPS работает, локальная dev-среда настроена; Шаг 8 закрыт полностью (8А–8В)
+**Дата составления:** 31 мая 2026 (обновлено 5 июня 2026)
+**Состояние:** Production на VPS работает, локальная dev-среда настроена; Шаг 8 закрыт полностью (8А–8В); Торговые сессии 1A+1B готовы (бэкенд), VPS ещё не мигрирован
 
 ---
 
@@ -324,7 +324,23 @@ ufw status           # какие порты открыты
 
 ### 9.6. БД не мигрирует автоматически
 
-`deploy.bat` обновляет код и зависимости, но **не делает миграций БД**. Если когда-то добавишь новую колонку в `models.py` или новую таблицу — после деплоя сервис может упасть из-за несоответствия схемы. Решение: либо вручную запустить миграционный скрипт через SSH, либо подключить Alembic в будущем.
+`deploy.bat` обновляет код и зависимости, но **не делает миграций БД**. Новые таблицы `create_all` создаёт сам, но новые колонки в существующих таблицах — нет. Нужен ручной `ALTER TABLE` через SSH.
+
+**Актуальный пример — миграция для торговых сессий (ещё не сделана на VPS):**
+```bash
+# 1. Бэкап обязателен
+cp /opt/p2p-system/data/p2p.db /opt/p2p-system/data/p2p_backup_pre_sessions.db
+
+# 2. Задеплоить код (deploy.bat с ПК) — create_all создаст таблицу sessions
+
+# 3. Добавить колонку session_id в существующую таблицу trades
+sqlite3 /opt/p2p-system/data/p2p.db \
+  "ALTER TABLE trades ADD COLUMN session_id INTEGER REFERENCES sessions(id);"
+
+# 4. Проверить
+sqlite3 /opt/p2p-system/data/p2p.db "PRAGMA table_info(trades);"
+sqlite3 /opt/p2p-system/data/p2p.db "SELECT name FROM sqlite_master WHERE type='table' AND name='sessions';"
+```
 
 ---
 
@@ -365,13 +381,40 @@ ufw status           # какие порты открыты
 
 ---
 
-### Следующее — Торговые сессии (крупная фича, 2–3 захода)
+### Торговые сессии — текущий статус (5 июня 2026)
 
-- Поле «Стартовый капитал ₴» + кнопка «Старт сессии»
-- Привязка сделок к активной сессии, шапка «Сессия №N от … активна»
-- «Закрыть сессию» + отчёт: реализовано / нереализовано (остаток USDT × текущий SELL-курс) / итого, BUY/SELL, оборот, длительность
-- Журнал группируется по сессиям + общий учёт
-- БД: новая таблица `sessions` + поле `session_id` в `trades`
+#### ✅ 1A: Схема БД (18827a8)
+Таблица `sessions` (11 полей: id, number, start_capital_uah, exchange, status, started_at, closed_at, close_sell_price, realized_uah, unrealized_uah, usdt_remaining) + поле `session_id FK` в `trades`. Миграция через `create_all` + ручной `ALTER TABLE`. Alembic в проекте не используется.
+
+#### ✅ 1B: Бэкенд (8506a3a)
+`api/routers/sessions.py` — 5 эндпоинтов:
+- `POST /api/sessions/start` — старт, проверка на уже активную (409), защита `require_api_key`
+- `POST /api/sessions/{id}/close` — закрытие: берёт SELL-курс из `get_orders`, считает P&L, фиксирует цифры навсегда. Если курс недоступен → **503**, сессия остаётся `active`
+- `GET /api/sessions` — список, сортировка по number DESC, счётчик сделок
+- `GET /api/sessions/active` — активная или `null`
+- `GET /api/sessions/{id}` — детали + список сделок
+
+Новые сделки (POST /api/trades) автоматически получают `session_id` активной сессии.
+
+**Формула P&L (проверена, realized = +64 на тест-примере):**
+```
+avg_buy_price  = total_uah_spent / total_usdt_bought     # средневзвешенная
+realized_uah   = uah_received − usdt_sold × avg_buy_price
+unrealized_uah = usdt_remaining × (current_sell_price − avg_buy_price)
+total_pnl      = realized + unrealized
+```
+
+#### ⏳ Осталось
+- **Миграция VPS** (делать руками через SSH):
+  ```bash
+  cp /opt/p2p-system/data/p2p.db /opt/p2p-system/data/p2p_backup_pre_sessions.db
+  # деплоим код → create_all создаст таблицу sessions автоматически
+  sqlite3 /opt/p2p-system/data/p2p.db \
+    "ALTER TABLE trades ADD COLUMN session_id INTEGER REFERENCES sessions(id);"
+  ```
+- **Фронт (часть 2)** — поле стартового капитала, кнопка «Старт сессии», шапка активной сессии, кнопка «Закрыть» + карточка отчёта
+- **Журнал по сессиям (часть 3)** — история группируется по сессиям, итоги по закрытым
+- **Очистка локальной БД** — тестовые сессии 1/2/3 с нулевым курсом; почистить перед реальным использованием
 
 ---
 
