@@ -101,6 +101,7 @@ export interface Trade {
   note: string | null
   executed_at: string
   created_at: string
+  session_id: number | null
 }
 
 export interface TradeCreate {
@@ -312,4 +313,9 @@ export async function closeSession(id: number): Promise<SessionOut> {
     }
     throw err
   }
+}
+
+export async function fetchSessions(): Promise<SessionOut[]> {
+  const { data } = await api.get<SessionOut[]>('/api/sessions')
+  return data
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { fetchTrades, deleteTrade, type Trade } from '../lib/api'
+import { fetchTrades, fetchSessions, deleteTrade, type Trade, type SessionOut } from '../lib/api'
 import { AddTradeModal } from './AddTradeModal'
-import { Trash2 } from 'lucide-react'
+import { Trash2, ChevronDown, ChevronRight } from 'lucide-react'
 
 function toUtcDate(iso: string): Date {
   return new Date(iso.endsWith('Z') || iso.includes('+') ? iso : iso + 'Z')
@@ -21,6 +21,10 @@ function formatKyiv(iso: string): string {
 
 const cellCls = 'px-2 py-1 text-xs'
 const headCls = 'px-2 py-1 text-xs font-medium whitespace-nowrap'
+
+// ---------------------------------------------------------------------------
+// Confirm delete dialog
+// ---------------------------------------------------------------------------
 
 interface ConfirmDeleteDialogProps {
   onCancel: () => void
@@ -110,8 +114,183 @@ function ConfirmDeleteDialog({ onCancel, onConfirm, loading, error }: ConfirmDel
   )
 }
 
+// ---------------------------------------------------------------------------
+// Trades table (shared by all groups)
+// ---------------------------------------------------------------------------
+
+function TradesTable({
+  trades,
+  onDelete,
+}: {
+  trades: Trade[]
+  onDelete: (id: number) => void
+}) {
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ borderBottom: '1px solid var(--border)' }}>
+            {['Дата', 'Тип', 'Курс', 'USDT', 'Банк', ''].map((h, i) => (
+              <th key={i} className={headCls} style={{ color: 'var(--muted)', textAlign: 'left' }}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {trades.map((t) => {
+            const isBuy = t.trade_type === 'BUY'
+            return (
+              <tr
+                key={t.id}
+                style={{ borderBottom: '1px solid var(--border)' }}
+                className="hover:bg-white/[0.03] transition-colors"
+              >
+                <td className={cellCls} style={{ color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                  {formatKyiv(t.executed_at)}
+                </td>
+                <td className={cellCls} style={{ color: isBuy ? 'var(--green)' : 'var(--red)', fontWeight: 700 }}>
+                  {t.trade_type}
+                </td>
+                <td className={`${cellCls} tabular-nums`} style={{ color: 'var(--text)' }}>
+                  {t.price.toFixed(2)}
+                </td>
+                <td className={`${cellCls} tabular-nums`} style={{ color: 'var(--text)' }}>
+                  {t.amount_usdt.toFixed(2)}
+                </td>
+                <td className={cellCls} style={{ color: 'var(--muted)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {t.bank ?? '—'}
+                </td>
+                <td className={cellCls} style={{ width: 28, textAlign: 'right' }}>
+                  <button
+                    onClick={() => onDelete(t.id)}
+                    title="Удалить сделку"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 2,
+                      cursor: 'pointer',
+                      color: 'var(--muted)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      borderRadius: 4,
+                      transition: 'color 0.15s',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--red)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--muted)' }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Session group
+// ---------------------------------------------------------------------------
+
+function sessionStatusLabel(status: string): { label: string; color: string } {
+  if (status === 'active') return { label: 'активна', color: 'var(--green)' }
+  return { label: 'закрыта', color: 'var(--muted)' }
+}
+
+function SessionGroup({
+  session,
+  trades,
+  defaultOpen,
+  onDelete,
+}: {
+  session: SessionOut | null
+  trades: Trade[]
+  defaultOpen: boolean
+  onDelete: (id: number) => void
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  const isOrphan = session === null
+  const { label: statusLabel, color: statusColor } = isOrphan
+    ? { label: '', color: '' }
+    : sessionStatusLabel(session.status)
+
+  const realized = isOrphan ? null : session.realized_uah
+  const realizedStr =
+    realized == null
+      ? null
+      : `${realized >= 0 ? '+' : ''}${realized.toFixed(2)} ₴`
+  const realizedColor = realized == null ? 'var(--muted)' : realized >= 0 ? 'var(--green)' : 'var(--red)'
+
+  return (
+    <div style={{ borderBottom: '1px solid var(--border)' }}>
+      {/* Group header */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          padding: '8px 0',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          textAlign: 'left',
+        }}
+      >
+        <span style={{ color: 'var(--muted)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </span>
+
+        {isOrphan ? (
+          <span className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>
+            Вне сессии
+          </span>
+        ) : (
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
+            <span className="font-semibold" style={{ color: 'var(--text)' }}>
+              Сессия №{session.number}
+            </span>
+            <span style={{ color: statusColor }}>{statusLabel}</span>
+            {realizedStr && (
+              <span className="tabular-nums" style={{ color: realizedColor }}>
+                {realizedStr}
+              </span>
+            )}
+            <span style={{ color: 'var(--muted)' }}>
+              {trades.length} {trades.length === 1 ? 'сделка' : trades.length < 5 ? 'сделки' : 'сделок'}
+            </span>
+          </span>
+        )}
+      </button>
+
+      {/* Trades */}
+      {open && trades.length > 0 && (
+        <div style={{ paddingBottom: 4 }}>
+          <TradesTable trades={trades} onDelete={onDelete} />
+        </div>
+      )}
+
+      {open && trades.length === 0 && (
+        <div className="py-3 text-xs" style={{ color: 'var(--muted)', paddingLeft: 20 }}>
+          Нет сделок в этой сессии
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
 export function TradesHistory() {
   const [trades, setTrades] = useState<Trade[]>([])
+  const [sessions, setSessions] = useState<SessionOut[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
@@ -120,8 +299,8 @@ export function TradesHistory() {
 
   function load() {
     setLoading(true)
-    fetchTrades(50, 0)
-      .then(setTrades)
+    Promise.all([fetchTrades(200, 0), fetchSessions()])
+      .then(([t, s]) => { setTrades(t); setSessions(s) })
       .finally(() => setLoading(false))
   }
 
@@ -158,6 +337,18 @@ export function TradesHistory() {
     }
   }
 
+  // Group trades by session_id
+  const tradesBySession = new Map<number | null, Trade[]>()
+  for (const t of trades) {
+    const key = t.session_id ?? null
+    if (!tradesBySession.has(key)) tradesBySession.set(key, [])
+    tradesBySession.get(key)!.push(t)
+  }
+
+  const orphanTrades = tradesBySession.get(null) ?? []
+  const hasSessions = sessions.length > 0
+  const hasAnything = trades.length > 0 || hasSessions
+
   return (
     <>
       <div className="flex flex-col gap-3">
@@ -184,81 +375,42 @@ export function TradesHistory() {
           </button>
         </div>
 
-        {/* Content */}
+        {/* Loading */}
         {loading && (
           <div className="py-8 text-center text-xs" style={{ color: 'var(--muted)' }}>
             Загрузка…
           </div>
         )}
 
-        {!loading && trades.length === 0 && (
+        {/* Empty state */}
+        {!loading && !hasAnything && (
           <div className="py-8 text-center text-xs leading-relaxed" style={{ color: 'var(--muted)' }}>
             Пока нет сделок.<br />Добавьте первую с Binance.
           </div>
         )}
 
-        {!loading && trades.length > 0 && (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {['Дата', 'Тип', 'Курс', 'USDT', 'Банк', ''].map((h, i) => (
-                    <th key={i} className={headCls} style={{ color: 'var(--muted)', textAlign: 'left' }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {trades.map((t) => {
-                  const isBuy = t.trade_type === 'BUY'
-                  return (
-                    <tr
-                      key={t.id}
-                      style={{ borderBottom: '1px solid var(--border)' }}
-                      className="hover:bg-white/[0.03] transition-colors"
-                    >
-                      <td className={cellCls} style={{ color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-                        {formatKyiv(t.executed_at)}
-                      </td>
-                      <td className={cellCls} style={{ color: isBuy ? 'var(--green)' : 'var(--red)', fontWeight: 700 }}>
-                        {t.trade_type}
-                      </td>
-                      <td className={`${cellCls} tabular-nums`} style={{ color: 'var(--text)' }}>
-                        {t.price.toFixed(2)}
-                      </td>
-                      <td className={`${cellCls} tabular-nums`} style={{ color: 'var(--text)' }}>
-                        {t.amount_usdt.toFixed(2)}
-                      </td>
-                      <td className={cellCls} style={{ color: 'var(--muted)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {t.bank ?? '—'}
-                      </td>
-                      <td className={cellCls} style={{ width: 28, textAlign: 'right' }}>
-                        <button
-                          onClick={() => openDeleteDialog(t.id)}
-                          title="Удалить сделку"
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            padding: 2,
-                            cursor: 'pointer',
-                            color: 'var(--muted)',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            borderRadius: 4,
-                            transition: 'color 0.15s',
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--red)' }}
-                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--muted)' }}
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+        {/* Grouped by sessions */}
+        {!loading && hasAnything && (
+          <div>
+            {sessions.map((s) => (
+              <SessionGroup
+                key={s.id}
+                session={s}
+                trades={tradesBySession.get(s.id) ?? []}
+                defaultOpen={s.status === 'active'}
+                onDelete={openDeleteDialog}
+              />
+            ))}
+
+            {orphanTrades.length > 0 && (
+              <SessionGroup
+                key="orphan"
+                session={null}
+                trades={orphanTrades}
+                defaultOpen={true}
+                onDelete={openDeleteDialog}
+              />
+            )}
           </div>
         )}
       </div>

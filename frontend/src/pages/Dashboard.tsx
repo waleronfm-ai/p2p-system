@@ -1,5 +1,6 @@
 import { PositionBar } from '../components/PositionBar'
 import { PriceChart } from '../components/PriceChart'
+import { SessionsSummary } from '../components/SessionsSummary'
 import { TrackerHealthWidget } from '../components/TrackerHealthWidget'
 import { TradesHistory } from '../components/TradesHistory'
 
@@ -33,6 +34,10 @@ export function Dashboard() {
       </div>
 
       <AIAgentCard />
+
+      <div style={cardStyle}>
+        <SessionsSummary />
+      </div>
 
       <div style={cardStyle}>
         <TradesHistory />
