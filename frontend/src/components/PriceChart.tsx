@@ -19,19 +19,19 @@ import { BandPrimitive } from '../lib/BandPrimitive'
 import { OpportunitiesPrimitive } from '../lib/OpportunitiesPrimitive'
 
 type Exchange = 'binance' | 'bybit'
-type Timeframe = '24h' | '7d' | '1m' | '3m' | '6m' | '1y'
+type Timeframe = '6h' | '12h' | '24h' | '7d' | '1m' | '3m'
 
 const PAIR = 'USDT/UAH'
 const TZ   = 'Europe/Kyiv'
 
-const ALL_TIMEFRAMES: Timeframe[] = ['24h', '7d', '1m', '3m', '6m', '1y']
+const ALL_TIMEFRAMES: Timeframe[] = ['6h', '12h', '24h', '7d', '1m', '3m']
 
 const TF_LABELS: Record<Timeframe, string> = {
-  '24h': '24Ч', '7d': '7Д', '1m': '1М', '3m': '3М', '6m': '6М', '1y': '1Г',
+  '6h': '6Ч', '12h': '12Ч', '24h': '24Ч', '7d': '7Д', '1m': '1М', '3m': '3М',
 }
 
 const TF_HOURS: Record<Timeframe, number> = {
-  '24h': 24, '7d': 168, '1m': 720, '3m': 2160, '6m': 4320, '1y': 8760,
+  '6h': 6, '12h': 12, '24h': 24, '7d': 168, '1m': 720, '3m': 2160,
 }
 
 const VOLUME_CHIPS = [

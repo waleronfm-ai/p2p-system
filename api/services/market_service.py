@@ -53,21 +53,21 @@ _TRUST_PRIORITY = {
 
 # ── Timeframe aggregation constants ──────────────────────────────────────────
 _TIMEFRAME_CONFIG: dict[str, dict] = {
+    "6h":  {"hours": 6,    "bucket_minutes": 1},
+    "12h": {"hours": 12,   "bucket_minutes": 2},
     "24h": {"hours": 24,   "bucket_minutes": 5},
     "7d":  {"hours": 168,  "bucket_minutes": 30},
     "1m":  {"hours": 720,  "bucket_minutes": 120},
     "3m":  {"hours": 2160, "bucket_minutes": 360},
-    "6m":  {"hours": 4320, "bucket_minutes": 720},
-    "1y":  {"hours": 8760, "bucket_minutes": 1440},
 }
 
 _TIMEFRAME_MIN_DAYS: dict[str, int] = {
+    "6h":  0,
+    "12h": 0,
     "24h": 0,
     "7d":  7,
     "1m":  30,
     "3m":  90,
-    "6m":  180,
-    "1y":  365,
 }
 
 
