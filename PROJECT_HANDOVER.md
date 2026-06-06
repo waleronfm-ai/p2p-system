@@ -1,7 +1,7 @@
 # P2P System — Полное описание рабочей среды
 
-**Дата составления:** 31 мая 2026 (обновлено 5 июня 2026)
-**Состояние:** Production на VPS работает, локальная dev-среда настроена; Шаг 8 закрыт полностью (8А–8В); Торговые сессии 1A+1B готовы (бэкенд), VPS ещё не мигрирован
+**Дата составления:** 31 мая 2026 (обновлено 6 июня 2026)
+**Состояние:** Production на VPS работает, локальная dev-среда настроена; Шаг 8 закрыт полностью (8А–8В); Торговые сессии: бэкенд (1A+1B) + миграция VPS + фронт (часть 2) — готовы; осталась часть 3 (журнал по сессиям)
 
 ---
 
@@ -324,23 +324,24 @@ ufw status           # какие порты открыты
 
 ### 9.6. БД не мигрирует автоматически
 
-`deploy.bat` обновляет код и зависимости, но **не делает миграций БД**. Новые таблицы `create_all` создаёт сам, но новые колонки в существующих таблицах — нет. Нужен ручной `ALTER TABLE` через SSH.
+`deploy.bat` обновляет код и зависимости, но **не делает миграций БД**. Alembic в проекте не используется. Новые таблицы `create_all` создаёт сам при старте приложения, но новые колонки в существующих таблицах — нет. Нужен ручной `ALTER TABLE` через SSH.
 
-**Актуальный пример — миграция для торговых сессий (ещё не сделана на VPS):**
+**Пример (выполнено 6 июня 2026 — миграция торговых сессий):**
 ```bash
-# 1. Бэкап обязателен
+# 1. Бэкап — обязателен перед любым ALTER
 cp /opt/p2p-system/data/p2p.db /opt/p2p-system/data/p2p_backup_pre_sessions.db
 
-# 2. Задеплоить код (deploy.bat с ПК) — create_all создаст таблицу sessions
+# 2. Задеплоить код → create_all создаёт новую таблицу sessions автоматически
+#    (запуск init_db: python -m scripts.init_db)
 
-# 3. Добавить колонку session_id в существующую таблицу trades
+# 3. Добавить колонку в существующую таблицу (сервис нужно остановить)
+systemctl stop p2p-api
 sqlite3 /opt/p2p-system/data/p2p.db \
   "ALTER TABLE trades ADD COLUMN session_id INTEGER REFERENCES sessions(id);"
-
-# 4. Проверить
-sqlite3 /opt/p2p-system/data/p2p.db "PRAGMA table_info(trades);"
-sqlite3 /opt/p2p-system/data/p2p.db "SELECT name FROM sqlite_master WHERE type='table' AND name='sessions';"
+systemctl start p2p-api
 ```
+
+Бэкапы на VPS: `p2p_backup_pre_sessions.db` и `p2p_backup_before_session_cleanup.db` (оба от 6 июня 2026).
 
 ---
 
@@ -381,7 +382,7 @@ sqlite3 /opt/p2p-system/data/p2p.db "SELECT name FROM sqlite_master WHERE type='
 
 ---
 
-### Торговые сессии — текущий статус (5 июня 2026)
+### Торговые сессии — текущий статус (6 июня 2026)
 
 #### ✅ 1A: Схема БД (18827a8)
 Таблица `sessions` (11 полей: id, number, start_capital_uah, exchange, status, started_at, closed_at, close_sell_price, realized_uah, unrealized_uah, usdt_remaining) + поле `session_id FK` в `trades`. Миграция через `create_all` + ручной `ALTER TABLE`. Alembic в проекте не используется.
@@ -389,32 +390,41 @@ sqlite3 /opt/p2p-system/data/p2p.db "SELECT name FROM sqlite_master WHERE type='
 #### ✅ 1B: Бэкенд (8506a3a)
 `api/routers/sessions.py` — 5 эндпоинтов:
 - `POST /api/sessions/start` — старт, проверка на уже активную (409), защита `require_api_key`
-- `POST /api/sessions/{id}/close` — закрытие: берёт SELL-курс из `get_orders`, считает P&L, фиксирует цифры навсегда. Если курс недоступен → **503**, сессия остаётся `active`
+- `POST /api/sessions/{id}/close` — закрытие: берёт SELL-курс из `get_orders` **самостоятельно** (фронт курс не передаёт — защита от подделки P&L). Фиксирует цифры навсегда. Если курс недоступен → **503**, сессия остаётся `active`
 - `GET /api/sessions` — список, сортировка по number DESC, счётчик сделок
 - `GET /api/sessions/active` — активная или `null`
-- `GET /api/sessions/{id}` — детали + список сделок
+- `GET /api/sessions/{id}` — детали + список сделок (SessionDetail с trades[])
 
 Новые сделки (POST /api/trades) автоматически получают `session_id` активной сессии.
 
-**Формула P&L (проверена, realized = +64 на тест-примере):**
+**Формула P&L (проверена, зафиксирована):**
 ```
 avg_buy_price  = total_uah_spent / total_usdt_bought     # средневзвешенная
 realized_uah   = uah_received − usdt_sold × avg_buy_price
 unrealized_uah = usdt_remaining × (current_sell_price − avg_buy_price)
-total_pnl      = realized + unrealized
+total_pnl      = realized + unrealized                   # фиксируется при закрытии навсегда
 ```
+⚠ Не путать с `TradeStats` (там другой расчёт с известным багом — не использовать для сессий).
+
+#### ✅ Миграция VPS (6 июня 2026)
+Выполнена вручную через SSH. Боевая база нетронута: `trades` (0 записей) и `snapshots` (~44к) целы. Тестовые сессии №1-3 очищены — следующая реальная будет №1. Бэкапы на сервере: `p2p_backup_pre_sessions.db`, `p2p_backup_before_session_cleanup.db`.
+
+#### ✅ Часть 2: Фронт (6 июня 2026) — коммиты 9d30d2c, 2c4e8d0
+**`frontend/src/lib/api.ts`:** интерфейс `SessionOut` + три функции:
+- `fetchActiveSession()` → `GET /api/sessions/active`
+- `startSession(capital, exchange)` → `POST /api/sessions/start`
+- `closeSession(id)` → `POST /api/sessions/{id}/close` **без тела** (курс берёт бэкенд). Перехватывает 503, бросает читаемую ошибку.
+
+**`frontend/src/components/PositionBar.tsx`:** блок сессии крайний слева, горизонтальная строка:
+- Нет активной → форма: `[Капитал ₴] [Binance ▼] [Старт]`
+- Активная → `Сессия №N | активна | капитал · время · биржа | [Закрыть]`
+- Диалог подтверждения закрытия (с обработкой 503 — сессия остаётся открытой)
+- Карточка отчёта: реализовано «живые деньги» / нереализовано «бумажная оценка» / ИТОГО / длительность / сделок
+- Состояние переживает перезагрузку страницы через `fetchActiveSession` при маунте
 
 #### ⏳ Осталось
-- **Миграция VPS** (делать руками через SSH):
-  ```bash
-  cp /opt/p2p-system/data/p2p.db /opt/p2p-system/data/p2p_backup_pre_sessions.db
-  # деплоим код → create_all создаст таблицу sessions автоматически
-  sqlite3 /opt/p2p-system/data/p2p.db \
-    "ALTER TABLE trades ADD COLUMN session_id INTEGER REFERENCES sessions(id);"
-  ```
-- **Фронт (часть 2)** — поле стартового капитала, кнопка «Старт сессии», шапка активной сессии, кнопка «Закрыть» + карточка отчёта
-- **Журнал по сессиям (часть 3)** — история группируется по сессиям, итоги по закрытым
-- **Очистка локальной БД** — тестовые сессии 1/2/3 с нулевым курсом; почистить перед реальным использованием
+- **Часть 3 — журнал по сессиям:** `TradesHistory` сейчас плоский список → сгруппировать по сессиям + итоговый P&L закрытых. Эндпоинт `GET /api/sessions/{id}` (SessionDetail с trades[]) уже готов.
+- **Очистка локальной БД** — тестовые сессии от curl-тестов 1B; не срочно (локалка в бой не идёт)
 
 ---
 
