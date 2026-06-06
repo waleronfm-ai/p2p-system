@@ -13,3 +13,6 @@ panel.html
 .playwright-mcp/
 screenshot_*.png
 verify-*.png
+session-*.png
+positionbar-*.png
+fullpage-*.png

@@ -263,3 +263,53 @@ export async function fetchTrackerHealth(): Promise<TrackerHealth> {
   const { data } = await api.get<TrackerHealth>('/api/info/tracker-health')
   return data
 }
+
+// ---------------------------------------------------------------------------
+// Trade Sessions (часть 2)
+// ---------------------------------------------------------------------------
+
+export interface SessionOut {
+  id: number
+  number: number
+  start_capital_uah: number
+  exchange: string
+  status: string
+  started_at: string
+  closed_at: string | null
+  close_sell_price: number | null
+  realized_uah: number | null
+  unrealized_uah: number | null
+  usdt_remaining: number | null
+  trade_count: number
+}
+
+export async function fetchActiveSession(): Promise<SessionOut | null> {
+  const { data } = await api.get<SessionOut | null>('/api/sessions/active')
+  return data
+}
+
+export async function startSession(
+  start_capital_uah: number,
+  exchange: string,
+): Promise<SessionOut> {
+  const { data } = await api.post<SessionOut>('/api/sessions/start', {
+    start_capital_uah,
+    exchange,
+  })
+  return data
+}
+
+export async function closeSession(id: number): Promise<SessionOut> {
+  try {
+    const { data } = await api.post<SessionOut>(`/api/sessions/${id}/close`)
+    return data
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 503) {
+      const detail = (err.response.data as { detail?: string })?.detail
+      throw new Error(
+        detail ?? 'Не удалось получить текущий курс. Попробуйте закрыть сессию через минуту.',
+      )
+    }
+    throw err
+  }
+}
