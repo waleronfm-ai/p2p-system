@@ -1,0 +1,239 @@
+"""AI-агент: аналитик P2P-торговли через Anthropic API (httpx, без SDK)."""
+from __future__ import annotations
+
+from typing import Any
+
+import httpx
+
+from config.settings import settings
+
+_API_URL = "https://api.anthropic.com/v1/messages"
+_ANTHROPIC_VERSION = "2023-06-01"
+_TIMEOUT = 30.0
+
+_SYSTEM_PROMPT = """\
+Ты — аналитик-комментатор P2P-торговли USDT/UAH на биржах Binance и Bybit.
+Твоя задача: разбирать данные объективно — факты, закономерности, мягкие наблюдения на будущее.
+Тон: спокойный, конструктивный, без паники и эйфории.
+СТРОГО ЗАПРЕЩЕНО: давать прямые торговые приказы («купи», «продавай», «входи сейчас» и т.п.).
+Только факты и наблюдения. Решение всегда остаётся за трейдером.
+Если пользователь напрямую просит совет «брать или нет» — не давай прямого ответа. Вместо этого опиши факты (где курс относительно истории, спред, фаза) и напомни, что решение за ним.
+Валюта: только ₴ (гривна) и $ (доллар). Рубли не упоминать никогда.
+Время: Europe/Kyiv (Киев).
+Отвечай кратко, по делу, на русском языке.\
+"""
+
+
+class AIServiceError(Exception):
+    """Базовое исключение AI-сервиса."""
+
+
+class AIKeyMissingError(AIServiceError):
+    """ANTHROPIC_API_KEY не задан в конфиге."""
+
+
+class AIResponseError(AIServiceError):
+    """API вернул ошибку или невалидный ответ."""
+
+
+def _require_key() -> str:
+    key = settings.anthropic_api_key
+    if not key:
+        raise AIKeyMissingError(
+            "ANTHROPIC_API_KEY не задан. Добавь его в config/.env."
+        )
+    return key
+
+
+# ── Построение user-сообщения по режиму ──────────────────────────────────────
+
+def _build_sessions_message(payload: dict[str, Any]) -> str:
+    """
+    payload ожидает:
+      sessions: list[dict]  — последние N сессий (SessionOut-поля)
+      trades:   list[dict]  — сделки активной или последней сессии (TradeOut-поля)
+      market:   dict        — {"buy_price": float, "sell_price": float} текущий рынок
+    """
+    lines: list[str] = ["## Торговые сессии\n"]
+
+    sessions: list[dict] = payload.get("sessions", [])
+    if not sessions:
+        lines.append("Сессий пока нет.\n")
+    else:
+        for s in sessions:
+            status = s.get("status", "?")
+            num = s.get("number", "?")
+            capital = s.get("start_capital_uah", 0)
+            realized = s.get("realized_uah")
+            unrealized = s.get("unrealized_uah")
+            remaining = s.get("usdt_remaining")
+            trade_count = s.get("trade_count", 0)
+            started = s.get("started_at", "?")
+            closed = s.get("closed_at")
+            close_price = s.get("close_sell_price")
+
+            lines.append(f"### Сессия №{num} [{status.upper()}]")
+            lines.append(f"- Старт капитала: ₴{capital:,.0f}")
+            lines.append(f"- Сделок: {trade_count}")
+            lines.append(f"- Начата: {started}")
+            if closed:
+                lines.append(f"- Закрыта: {closed}")
+            if close_price:
+                lines.append(f"- Курс закрытия: ₴{close_price:.2f}")
+            if realized is not None:
+                lines.append(f"- Реализованный P&L: ₴{realized:+.2f}")
+            if unrealized is not None:
+                lines.append(f"- Нереализованный P&L: ₴{unrealized:+.2f}")
+            if remaining is not None:
+                lines.append(f"- Остаток USDT: ${remaining:.2f}")
+            lines.append("")
+
+    trades: list[dict] = payload.get("trades", [])
+    if trades:
+        lines.append("## Сделки текущей сессии\n")
+        buys = [t for t in trades if t.get("trade_type") == "BUY"]
+        sells = [t for t in trades if t.get("trade_type") == "SELL"]
+        total_usdt_bought = sum(t.get("amount_usdt", 0) for t in buys)
+        total_uah_spent = sum(t.get("amount_uah", 0) for t in buys)
+        total_usdt_sold = sum(t.get("amount_usdt", 0) for t in sells)
+        total_uah_received = sum(t.get("amount_uah", 0) for t in sells)
+        avg_buy = (total_uah_spent / total_usdt_bought) if total_usdt_bought else None
+
+        lines.append(f"- Покупок: {len(buys)} шт., куплено ${total_usdt_bought:.2f} за ₴{total_uah_spent:,.2f}")
+        if avg_buy:
+            lines.append(f"- Средняя цена покупки: ₴{avg_buy:.2f}")
+        lines.append(f"- Продаж: {len(sells)} шт., продано ${total_usdt_sold:.2f} за ₴{total_uah_received:,.2f}")
+
+        lines.append("\nДетали сделок:")
+        for t in trades:
+            ttype = t.get("trade_type", "?")
+            price = t.get("price", 0)
+            usdt = t.get("amount_usdt", 0)
+            uah = t.get("amount_uah", 0)
+            bank = t.get("bank") or "—"
+            at = str(t.get("executed_at", "?"))[:16]
+            lines.append(f"  [{ttype}] ₴{price:.2f} × ${usdt:.2f} = ₴{uah:.2f} | банк: {bank} | {at}")
+        lines.append("")
+
+    market: dict = payload.get("market", {})
+    if market:
+        lines.append("## Текущий рынок (Binance USDT/UAH)")
+        buy_p = market.get("buy_price")
+        sell_p = market.get("sell_price")
+        if buy_p:
+            lines.append(f"- BUY (лучшая цена покупки): ₴{buy_p:.2f}")
+        if sell_p:
+            lines.append(f"- SELL (лучшая цена продажи): ₴{sell_p:.2f}")
+        if buy_p and sell_p:
+            spread = sell_p - buy_p
+            lines.append(f"- Спред BUY→SELL: ₴{spread:.2f} ({spread / buy_p * 100:.2f}%)")
+
+    lines.append("\nПроанализируй сессию(и) и дай краткий комментарий трейдеру.")
+    return "\n".join(lines)
+
+
+def _build_market_message(payload: dict[str, Any]) -> str:
+    """
+    payload ожидает:
+      summary: list[dict]  — PairSummary-поля (exchange, pair, mode, price_now, price_avg, price_min, price_max)
+      chart:   list[dict]  — последние N точек ChartPointAgg (ts, buy_price, sell_price)
+    """
+    lines: list[str] = ["## Сводка рынка USDT/UAH\n"]
+
+    summary: list[dict] = payload.get("summary", [])
+    if summary:
+        for p in summary:
+            exch = p.get("exchange", "?")
+            mode = p.get("mode", "?")
+            now = p.get("price_now")
+            avg = p.get("price_avg")
+            pmin = p.get("price_min")
+            pmax = p.get("price_max")
+            snaps = p.get("snapshots", 0)
+            line = f"[{exch.upper()} {mode.upper()}]"
+            if now:
+                line += f" сейчас: ₴{now:.2f}"
+            if avg:
+                line += f", среднее: ₴{avg:.2f}"
+            if pmin and pmax:
+                line += f", диапазон: ₴{pmin:.2f}–₴{pmax:.2f}"
+            line += f" ({snaps} снапшотов)"
+            lines.append(line)
+        lines.append("")
+
+    chart: list[dict] = payload.get("chart", [])
+    if chart:
+        lines.append(f"## Последние {len(chart)} точек графика (хронологически)\n")
+        lines.append("ts_unix | BUY ₴ | SELL ₴")
+        for pt in chart[-20:]:
+            ts = pt.get("ts", "?")
+            buy = pt.get("buy_price", 0)
+            sell = pt.get("sell_price", 0)
+            lines.append(f"{ts} | {buy:.2f} | {sell:.2f}")
+        lines.append("")
+
+    lines.append("Прокомментируй текущую рыночную ситуацию кратко.")
+    return "\n".join(lines)
+
+
+_MESSAGE_BUILDERS = {
+    "sessions": _build_sessions_message,
+    "market": _build_market_message,
+}
+
+
+# ── Основная функция ──────────────────────────────────────────────────────────
+
+async def analyze(mode: str, payload: dict[str, Any]) -> str:
+    """
+    Вызывает Anthropic API и возвращает текст комментария агента.
+
+    mode:    "sessions" | "market"
+    payload: данные для анализа (см. _build_*_message)
+
+    Raises:
+        AIKeyMissingError  — ключ не задан в конфиге
+        AIServiceError     — ошибка API или таймаут
+    """
+    if mode not in _MESSAGE_BUILDERS:
+        raise AIServiceError(f"Неизвестный режим агента: {mode!r}. Допустимо: {list(_MESSAGE_BUILDERS)}")
+
+    api_key = _require_key()
+    user_message = _MESSAGE_BUILDERS[mode](payload)
+
+    headers = {
+        "x-api-key": api_key,
+        "anthropic-version": _ANTHROPIC_VERSION,
+        "content-type": "application/json",
+    }
+    body = {
+        "model": settings.anthropic_model,
+        "max_tokens": 1024,
+        "system": _SYSTEM_PROMPT,
+        "messages": [{"role": "user", "content": user_message}],
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            response = await client.post(_API_URL, headers=headers, json=body)
+    except httpx.TimeoutException:
+        raise AIServiceError("Anthropic API не ответил за 30 секунд. Попробуй позже.")
+    except httpx.RequestError as exc:
+        raise AIServiceError(f"Ошибка сети при запросе к Anthropic: {exc}")
+
+    if response.status_code == 401:
+        raise AIServiceError("Anthropic API: неверный ключ (401). Проверь ANTHROPIC_API_KEY в config/.env.")
+    if response.status_code == 429:
+        raise AIServiceError("Anthropic API: превышен лимит запросов (429). Подожди немного.")
+    if response.status_code >= 400:
+        try:
+            detail = response.json().get("error", {}).get("message", response.text[:200])
+        except Exception:
+            detail = response.text[:200]
+        raise AIResponseError(f"Anthropic API вернул {response.status_code}: {detail}")
+
+    try:
+        data = response.json()
+        return data["content"][0]["text"]
+    except (KeyError, IndexError, ValueError) as exc:
+        raise AIResponseError(f"Неожиданный формат ответа Anthropic: {exc}. Тело: {response.text[:300]}")

@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import banks, health, info, makers, market, position, sessions, trades
+from api.routers import ai, banks, health, info, makers, market, position, sessions, trades
 from config.settings import settings
 
 
@@ -36,3 +36,4 @@ app.include_router(banks.router, prefix="/api")
 app.include_router(trades.router, prefix="/api")
 app.include_router(sessions.router, prefix="/api")
 app.include_router(position.router, prefix="/api")
+app.include_router(ai.router, prefix="/api")
