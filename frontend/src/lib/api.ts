@@ -319,3 +319,26 @@ export async function fetchSessions(): Promise<SessionOut[]> {
   const { data } = await api.get<SessionOut[]>('/api/sessions')
   return data
 }
+
+// ---------------------------------------------------------------------------
+// AI-агент (Step 9)
+// ---------------------------------------------------------------------------
+
+export async function analyzeAI(
+  mode: 'sessions' | 'market',
+  exchange = 'binance',
+): Promise<string> {
+  try {
+    const { data } = await api.post<{ mode: string; analysis: string }>(
+      '/api/ai/analyze',
+      { mode, exchange },
+    )
+    return data.analysis
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const detail = (err.response?.data as { detail?: string })?.detail
+      if (typeof detail === 'string') throw new Error(detail)
+    }
+    throw err
+  }
+}

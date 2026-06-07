@@ -1,3 +1,4 @@
+import { AIAgentCard } from '../components/AIAgentCard'
 import { PositionBar } from '../components/PositionBar'
 import { PriceChart } from '../components/PriceChart'
 import { SessionsSummary } from '../components/SessionsSummary'
@@ -9,18 +10,6 @@ const cardStyle: React.CSSProperties = {
   border: '1px solid var(--border)',
   borderRadius: 12,
   padding: 20,
-}
-
-function AIAgentCard() {
-  return (
-    <div
-      style={{ ...cardStyle, minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-    >
-      <span className="text-sm" style={{ color: 'var(--muted)' }}>
-        AI-агент скоро появится
-      </span>
-    </div>
-  )
 }
 
 export function Dashboard() {
