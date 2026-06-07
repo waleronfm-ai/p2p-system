@@ -135,41 +135,86 @@ def _build_sessions_message(payload: dict[str, Any]) -> str:
 def _build_market_message(payload: dict[str, Any]) -> str:
     """
     payload ожидает:
-      summary: list[dict]  — PairSummary-поля (exchange, pair, mode, price_now, price_avg, price_min, price_max)
-      chart:   list[dict]  — последние N точек ChartPointAgg (ts, buy_price, sell_price)
+      summary: dict  — {exchange, pair, period_days,
+                         buy: {current, min_30d, max_30d, avg_30d, position_pct, phase},
+                         sell: {current, min_30d, max_30d, avg_30d},
+                         spread: {current, avg_30d, vs_avg}}
+      chart:   list[dict]  — дневные точки {ts, buy_price, sell_price}
+      note:    str | отсутствует  — сообщение если данных недостаточно
     """
-    lines: list[str] = ["## Сводка рынка USDT/UAH\n"]
+    lines: list[str] = ["## Рыночная аналитика USDT/UAH\n"]
 
-    summary: list[dict] = payload.get("summary", [])
-    if summary:
-        for p in summary:
-            exch = p.get("exchange", "?")
-            mode = p.get("mode", "?")
-            now = p.get("price_now")
-            avg = p.get("price_avg")
-            pmin = p.get("price_min")
-            pmax = p.get("price_max")
-            snaps = p.get("snapshots", 0)
-            line = f"[{exch.upper()} {mode.upper()}]"
-            if now:
-                line += f" сейчас: ₴{now:.2f}"
-            if avg:
-                line += f", среднее: ₴{avg:.2f}"
-            if pmin and pmax:
-                line += f", диапазон: ₴{pmin:.2f}–₴{pmax:.2f}"
-            line += f" ({snaps} снапшотов)"
-            lines.append(line)
-        lines.append("")
+    note = payload.get("note")
+    if note:
+        lines.append(f"⚠️ {note}")
+        lines.append("\nПрокомментируй ситуацию кратко.")
+        return "\n".join(lines)
+
+    s: dict = payload.get("summary") or {}
+    if s:
+        exch = s.get("exchange", "н/д").upper()
+        pair = s.get("pair", "н/д")
+        period = s.get("period_days", "н/д")
+        lines.append(f"Биржа: {exch} | Пара: {pair} | Период: {period} дн.\n")
+
+        buy: dict = s.get("buy") or {}
+        if buy:
+            lines.append("### BUY (покупаем USDT)")
+            cur = buy.get("current")
+            bmin = buy.get("min_30d")
+            bmax = buy.get("max_30d")
+            bavg = buy.get("avg_30d")
+            pct = buy.get("position_pct")
+            phase = buy.get("phase", "н/д")
+            if cur is not None:
+                lines.append(f"- Текущий курс: ₴{cur:.2f}")
+            if bmin is not None and bmax is not None:
+                lines.append(f"- Диапазон 30 дн.: ₴{bmin:.2f} – ₴{bmax:.2f}")
+            if bavg is not None:
+                lines.append(f"- Средний 30 дн.: ₴{bavg:.2f}")
+            if pct is not None:
+                lines.append(f"- Позиция в диапазоне: {pct:.1f}% ({phase})")
+            lines.append("")
+
+        sell: dict = s.get("sell") or {}
+        if sell:
+            lines.append("### SELL (продаём USDT)")
+            cur = sell.get("current")
+            smin = sell.get("min_30d")
+            smax = sell.get("max_30d")
+            savg = sell.get("avg_30d")
+            if cur is not None:
+                lines.append(f"- Текущий курс: ₴{cur:.2f}")
+            if smin is not None and smax is not None:
+                lines.append(f"- Диапазон 30 дн.: ₴{smin:.2f} – ₴{smax:.2f}")
+            if savg is not None:
+                lines.append(f"- Средний 30 дн.: ₴{savg:.2f}")
+            lines.append("")
+
+        spread: dict = s.get("spread") or {}
+        if spread:
+            lines.append("### Спред BUY→SELL")
+            cur = spread.get("current")
+            avg = spread.get("avg_30d")
+            vs = spread.get("vs_avg")
+            if cur is not None:
+                lines.append(f"- Текущий: ₴{cur:.2f}")
+            if avg is not None:
+                lines.append(f"- Средний 30 дн.: ₴{avg:.2f}")
+            if vs is not None:
+                sign = "+" if vs >= 0 else ""
+                lines.append(f"- Отклонение от среднего: {sign}₴{vs:.2f}")
+            lines.append("")
 
     chart: list[dict] = payload.get("chart", [])
     if chart:
-        lines.append(f"## Последние {len(chart)} точек графика (хронологически)\n")
+        lines.append(f"### Дневной ряд ({len(chart)} точек, хронологически)\n")
         lines.append("ts_unix | BUY ₴ | SELL ₴")
         for pt in chart[-20:]:
             ts = pt.get("ts", "?")
-            buy = pt.get("buy_price", 0)
-            sell = pt.get("sell_price", 0)
-            lines.append(f"{ts} | {buy:.2f} | {sell:.2f}")
+            buy_p = pt.get("buy_price", 0)
+            sell_p = pt.get("sell_price", 0)
+            lines.append(f"{ts} | {buy_p:.2f} | {sell_p:.2f}")
         lines.append("")
 
     lines.append("Прокомментируй текущую рыночную ситуацию кратко.")
