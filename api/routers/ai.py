@@ -248,6 +248,162 @@ def _collect_market_payload(exchange: str, period: str) -> dict[str, Any]:
     return {"summary": summary, "chart": chart_points}
 
 
+# ── Сбор данных: режим "position" ─────────────────────────────────────────────
+
+def _range_stats(points: list) -> dict[str, float]:
+    """min/max/avg по buy и sell из списка ChartPointAgg."""
+    if not points:
+        return {}
+    buy = [p.buy_price for p in points]
+    sell = [p.sell_price for p in points]
+    spreads = [p.sell_price - p.buy_price for p in points]
+    return {
+        "buy_min":    round(min(buy), 4),
+        "buy_max":    round(max(buy), 4),
+        "buy_avg":    round(statistics.mean(buy), 4),
+        "sell_min":   round(min(sell), 4),
+        "sell_max":   round(max(sell), 4),
+        "sell_avg":   round(statistics.mean(sell), 4),
+        "spread_avg": round(statistics.mean(spreads), 4),
+    }
+
+
+def _collect_position_payload(exchange: str) -> dict[str, Any] | None:
+    """
+    Возвращает payload текущей открытой позиции или None, если активной сессии нет.
+
+    Содержит:
+      session  — мета сессии
+      position — все метрики позиции (avg_buy, remaining, realized, break_even…)
+      market   — текущий BUY/SELL + нереализованный P&L
+      ranges   — диапазоны за 24ч и 7д для построения сценариев
+      trades   — детальный список сделок сессии
+    """
+    with get_session() as db:
+        session = db.scalars(
+            select(Session).where(Session.status == "active").limit(1)
+        ).first()
+
+        if session is None:
+            return None
+
+        trades = db.scalars(
+            select(Trade)
+            .where(Trade.session_id == session.id)
+            .order_by(Trade.executed_at.asc())
+        ).all()
+
+        buys  = [t for t in trades if t.trade_type == "BUY"]
+        sells = [t for t in trades if t.trade_type == "SELL"]
+
+        usdt_bought   = sum(t.amount_usdt for t in buys)
+        uah_spent     = sum(t.amount_uah  for t in buys)
+        usdt_sold     = sum(t.amount_usdt for t in sells)
+        uah_received  = sum(t.amount_uah  for t in sells)
+        usdt_remaining = round(usdt_bought - usdt_sold, 6)
+
+        avg_buy: float | None = round(uah_spent / usdt_bought, 4) if usdt_bought else None
+        break_even = avg_buy  # продать остаток по avg_buy → нулевой итог
+
+        # Реализованный P&L: uah_received - usdt_sold * avg_buy
+        realized_uah: float | None = None
+        if avg_buy is not None and usdt_sold:
+            realized_uah = round(uah_received - usdt_sold * avg_buy, 2)
+
+        duration_min: int | None = None
+        if session.started_at:
+            duration_min = int(
+                (datetime.now(UTC).replace(tzinfo=None) - session.started_at).total_seconds() / 60
+            )
+
+        session_meta = {
+            "number":           session.number,
+            "started_at":       str(session.started_at)[:16],
+            "duration_minutes": duration_min,
+            "start_capital_uah": session.start_capital_uah,
+            "exchange":         session.exchange,
+            "trade_count":      len(trades),
+        }
+
+        position = {
+            "usdt_bought":    round(usdt_bought, 4),
+            "uah_spent":      round(uah_spent, 2),
+            "usdt_sold":      round(usdt_sold, 4),
+            "uah_received":   round(uah_received, 2),
+            "usdt_remaining": usdt_remaining,
+            "avg_buy":        avg_buy,
+            "break_even":     break_even,
+            "realized_uah":   realized_uah,
+        }
+
+        trades_data = [
+            {
+                "trade_type":  t.trade_type,
+                "price":       t.price,
+                "amount_usdt": t.amount_usdt,
+                "amount_uah":  t.amount_uah,
+                "bank":        t.bank,
+                "executed_at": str(t.executed_at)[:16],
+            }
+            for t in trades
+        ]
+
+    # Текущий рынок
+    market: dict[str, Any] = {}
+    try:
+        buy_orders  = get_orders(pair="USDT/UAH", mode="buy",  exchange=exchange, top=1)
+        sell_orders = get_orders(pair="USDT/UAH", mode="sell", exchange=exchange, top=1)
+        current_buy  = buy_orders[0].price  if buy_orders  else None
+        current_sell = sell_orders[0].price if sell_orders else None
+
+        spread_current: float | None = None
+        if current_buy and current_sell:
+            spread_current = round(current_sell - current_buy, 4)
+
+        unrealized_uah: float | None = None
+        unrealized_pct: float | None = None
+        if avg_buy is not None and current_sell is not None and usdt_remaining > 0:
+            unrealized_uah = round(usdt_remaining * (current_sell - avg_buy), 2)
+            unrealized_pct = round((current_sell - avg_buy) / avg_buy * 100, 2)
+
+        market = {
+            "current_buy":    current_buy,
+            "current_sell":   current_sell,
+            "spread_current": spread_current,
+            "unrealized_uah": unrealized_uah,
+            "unrealized_pct": unrealized_pct,
+        }
+    except Exception:
+        pass
+
+    # Диапазоны 24ч и 7д — из локальной БД, быстро
+    ranges: dict[str, Any] = {}
+    try:
+        agg_24h = get_chart_agg(pair="USDT/UAH", timeframe="24h", exchange=exchange)
+        agg_7d  = get_chart_agg(pair="USDT/UAH", timeframe="7d",  exchange=exchange)
+        d1 = _range_stats(agg_24h.points) if not agg_24h.insufficient_data else {}
+        d7 = _range_stats(agg_7d.points)  if not agg_7d.insufficient_data  else {}
+
+        # Где текущий avg_buy относительно недельного диапазона
+        if avg_buy and d7.get("buy_min") is not None and d7.get("buy_max") is not None:
+            rng = d7["buy_max"] - d7["buy_min"]
+            d7["avg_buy_position_pct"] = (
+                round((avg_buy - d7["buy_min"]) / rng * 100, 1) if rng else 50.0
+            )
+
+        ranges = {"d1": d1, "d7": d7}
+    except Exception:
+        pass
+
+    return {
+        "session":  session_meta,
+        "position": position,
+        "market":   market,
+        "ranges":   ranges,
+        "trades":   trades_data,
+    }
+
+
 # ── Эндпоинт ─────────────────────────────────────────────────────────────────
 
 @router.post(
@@ -262,8 +418,8 @@ async def ai_analyze(
 ):
     _rate_limit(request)
 
-    if body.mode not in ("sessions", "market"):
-        raise HTTPException(422, detail="mode must be 'sessions' or 'market'")
+    if body.mode not in ("sessions", "market", "position"):
+        raise HTTPException(422, detail="mode must be 'sessions', 'market' or 'position'")
     if body.exchange not in ("binance", "bybit"):
         raise HTTPException(422, detail="exchange must be 'binance' or 'bybit'")
     if body.period not in _VALID_PERIODS:
@@ -278,6 +434,13 @@ async def ai_analyze(
             return AIAnalyzeResponse(
                 mode="sessions",
                 analysis="Пока нет закрытых сессий для анализа. Закрой первую сессию — и агент даст комментарий.",
+            )
+    elif body.mode == "position":
+        payload = _collect_position_payload(body.exchange)
+        if payload is None:
+            return AIAnalyzeResponse(
+                mode="position",
+                analysis="Нет открытой сессии. Начни сессию, чтобы анализировать текущую позицию.",
             )
     else:
         payload = _collect_market_payload(body.exchange, body.period)

@@ -224,9 +224,141 @@ def _build_market_message(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _build_position_message(payload: dict[str, Any]) -> str:
+    """
+    payload ожидает:
+      session:  dict  — мета сессии (number, started_at, duration_minutes, …)
+      position: dict  — avg_buy, remaining, realized, break_even, …
+      market:   dict  — current_buy, current_sell, unrealized_uah, unrealized_pct, …
+      ranges:   dict  — d1/d7: {buy_min, buy_max, buy_avg, sell_avg, spread_avg, …}
+      trades:   list  — сделки сессии
+    """
+    lines: list[str] = []
+
+    s: dict = payload.get("session") or {}
+    p: dict = payload.get("position") or {}
+    m: dict = payload.get("market") or {}
+    r: dict = payload.get("ranges") or {}
+    trades: list[dict] = payload.get("trades") or []
+
+    # ── Сессия ────────────────────────────────────────────────────────────────
+    num = s.get("number", "?")
+    started = s.get("started_at", "?")
+    dur = s.get("duration_minutes")
+    capital = s.get("start_capital_uah")
+    trade_count = s.get("trade_count", 0)
+
+    dur_str = f"{dur} мин" if dur is not None and dur < 120 else (f"{dur // 60} ч {dur % 60} мин" if dur else "н/д")
+    lines.append(f"## Текущая открытая позиция — Сессия №{num}\n")
+    lines.append(f"- Начата: {started} (идёт {dur_str})")
+    if capital:
+        lines.append(f"- Стартовый капитал: ₴{capital:,.0f}")
+    lines.append(f"- Сделок: {trade_count}")
+    lines.append("")
+
+    # ── Позиция ───────────────────────────────────────────────────────────────
+    lines.append("### Позиция")
+    usdt_bought   = p.get("usdt_bought", 0)
+    uah_spent     = p.get("uah_spent", 0)
+    usdt_sold     = p.get("usdt_sold", 0)
+    uah_received  = p.get("uah_received", 0)
+    remaining     = p.get("usdt_remaining", 0)
+    avg_buy       = p.get("avg_buy")
+    break_even    = p.get("break_even")
+    realized      = p.get("realized_uah")
+
+    if usdt_bought:
+        lines.append(f"- Куплено: ${usdt_bought:.4f} за ₴{uah_spent:,.2f}")
+    if usdt_sold:
+        lines.append(f"- Продано: ${usdt_sold:.4f} за ₴{uah_received:,.2f}")
+    lines.append(f"- На руках сейчас: ${remaining:.4f} USDT")
+    if avg_buy is not None:
+        lines.append(f"- Средняя цена покупки (avg buy): ₴{avg_buy:.2f}")
+        lines.append(f"- Break-even (продать остаток с нулём): ₴{break_even:.2f}")
+    if realized is not None:
+        sign = "+" if realized >= 0 else ""
+        lines.append(f"- Реализованный P&L: {sign}₴{realized:,.2f}")
+    lines.append("")
+
+    # ── Рынок сейчас ──────────────────────────────────────────────────────────
+    lines.append("### Рынок сейчас")
+    cur_buy  = m.get("current_buy")
+    cur_sell = m.get("current_sell")
+    spread   = m.get("spread_current")
+    unr_uah  = m.get("unrealized_uah")
+    unr_pct  = m.get("unrealized_pct")
+
+    if cur_buy is not None:
+        lines.append(f"- BUY: ₴{cur_buy:.2f}")
+    if cur_sell is not None:
+        lines.append(f"- SELL: ₴{cur_sell:.2f}")
+    if spread is not None:
+        lines.append(f"- Спред: ₴{spread:.2f}")
+    if unr_uah is not None and remaining > 0:
+        sign = "+" if unr_uah >= 0 else ""
+        pct_str = f" ({sign}{unr_pct:.2f}%)" if unr_pct is not None else ""
+        lines.append(f"- Нереализованный P&L: {sign}₴{unr_uah:,.2f}{pct_str}")
+    if avg_buy and cur_sell:
+        gap = round(cur_sell - avg_buy, 2)
+        sign = "+" if gap >= 0 else ""
+        lines.append(f"- Текущий SELL vs avg buy: {sign}₴{gap:.2f}")
+    lines.append("")
+
+    # ── Диапазоны ─────────────────────────────────────────────────────────────
+    lines.append("### Диапазоны (из истории)")
+    d1: dict = r.get("d1") or {}
+    d7: dict = r.get("d7") or {}
+    if d1:
+        lines.append(
+            f"24 часа: BUY ₴{d1.get('buy_min', '?'):.2f} – ₴{d1.get('buy_max', '?'):.2f}"
+            f", среднее ₴{d1.get('buy_avg', '?'):.2f}"
+            f" | спред avg ₴{d1.get('spread_avg', '?'):.2f}"
+        )
+    if d7:
+        lines.append(
+            f"7 дней:  BUY ₴{d7.get('buy_min', '?'):.2f} – ₴{d7.get('buy_max', '?'):.2f}"
+            f", среднее ₴{d7.get('buy_avg', '?'):.2f}"
+            f" | спред avg ₴{d7.get('spread_avg', '?'):.2f}"
+        )
+        pos7 = d7.get("avg_buy_position_pct")
+        if avg_buy and pos7 is not None:
+            lines.append(f"  avg buy в 7д диапазоне: {pos7:.1f}% (0%=мин, 100%=макс)")
+    lines.append("")
+
+    # ── Опорные точки для сценариев ───────────────────────────────────────────
+    lines.append("### Опорные точки для сценариев")
+    if break_even is not None:
+        lines.append(f"- Break-even: ₴{break_even:.2f}")
+    if cur_sell and break_even:
+        delta = round(cur_sell - break_even, 2)
+        sign = "+" if delta >= 0 else ""
+        lines.append(f"- Текущий SELL выше break-even на: {sign}₴{delta:.2f}")
+    if d7.get("buy_min") and d7.get("buy_max"):
+        lines.append(f"- Нижняя граница 7д диапазона: ₴{d7['buy_min']:.2f}")
+        lines.append(f"- Верхняя граница 7д диапазона: ₴{d7['buy_max']:.2f}")
+    lines.append("")
+
+    # ── Детали сделок ─────────────────────────────────────────────────────────
+    if trades:
+        lines.append("### Сделки сессии")
+        for t in trades:
+            ttype = t.get("trade_type", "?")
+            price = t.get("price", 0)
+            usdt  = t.get("amount_usdt", 0)
+            uah   = t.get("amount_uah", 0)
+            bank  = t.get("bank") or "—"
+            at    = str(t.get("executed_at", "?"))[:16]
+            lines.append(f"  [{ttype}] ₴{price:.2f} × ${usdt:.4f} = ₴{uah:.2f} | банк: {bank} | {at}")
+        lines.append("")
+
+    lines.append("Разбери текущую позицию подробно: что имеем, какие возможны сценарии на основе опорных точек. Без команд и прямых рекомендаций.")
+    return "\n".join(lines)
+
+
 _MESSAGE_BUILDERS = {
     "sessions": _build_sessions_message,
-    "market": _build_market_message,
+    "market":   _build_market_message,
+    "position": _build_position_message,
 }
 
 
