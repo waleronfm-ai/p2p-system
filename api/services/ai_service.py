@@ -1,14 +1,11 @@
 """AI-агент: аналитик P2P-торговли через Anthropic API (httpx, без SDK)."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import httpx
 
 from config.settings import settings
-
-_dbg = logging.getLogger("ai_service.debug")
 
 _API_URL = "https://api.anthropic.com/v1/messages"
 _ANTHROPIC_VERSION = "2023-06-01"
@@ -284,11 +281,6 @@ async def analyze(mode: str, payload: dict[str, Any]) -> str:
     try:
         data = response.json()
         text = data["content"][0]["text"]
-        # TEMP DEBUG — убрать после диагностики
-        _dbg.warning("AI_DEBUG content-type: %s", response.headers.get("content-type"))
-        _dbg.warning("AI_DEBUG response.encoding: %s", response.encoding)
-        _dbg.warning("AI_DEBUG text repr[:200]: %s", repr(text[:200]))
-        _dbg.warning("AI_DEBUG text bytes[:60]: %s", text[:60].encode("utf-8"))
         return text
     except (KeyError, IndexError, ValueError) as exc:
         raise AIResponseError(f"Неожиданный формат ответа Anthropic: {exc}. Тело: {response.text[:300]}")
