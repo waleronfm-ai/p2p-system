@@ -40,9 +40,20 @@ def _rate_limit(request: Request) -> None:
 
 # ── Схемы запроса/ответа ──────────────────────────────────────────────────────
 
+_PERIOD_CONFIG: dict[str, dict] = {
+    "12h": {"timeframe": "12h", "bucket_sec": 1800,  "label": "12 часов"},
+    "24h": {"timeframe": "24h", "bucket_sec": 3600,  "label": "24 часа"},
+    "7d":  {"timeframe": "7d",  "bucket_sec": 21600, "label": "7 дней"},
+    "30d": {"timeframe": "1m",  "bucket_sec": 86400, "label": "30 дней"},
+}
+
+_VALID_PERIODS = set(_PERIOD_CONFIG)
+
+
 class AIAnalyzeRequest(BaseModel):
     mode: str
     exchange: str = "binance"
+    period: str = "30d"
 
 
 class AIAnalyzeResponse(BaseModel):
@@ -142,39 +153,47 @@ def _collect_sessions_payload(exchange: str) -> dict[str, Any] | None:
 
 # ── Сбор данных: режим "market" ───────────────────────────────────────────────
 
-def _collect_market_payload(exchange: str) -> dict[str, Any]:
+def _collect_market_payload(exchange: str, period: str) -> dict[str, Any]:
     """
-    Агрегирует историю за 30 дней в дневные бакеты (~30 точек).
-    Из 2-часовых точек get_chart_agg("1m") делает дневную медиану.
-    В payload попадает компактная выжимка + дневной ряд, НЕ сырьё.
+    Агрегирует историю за выбранный период в компактные бакеты (~24-30 точек).
+
+    period → timeframe → bucket_sec:
+      12h  → get_chart_agg("12h") → 30-мин бакеты
+      24h  → get_chart_agg("24h") → часовые бакеты
+      7d   → get_chart_agg("7d")  → 6-часовые бакеты
+      30d  → get_chart_agg("1m")  → дневные бакеты
     """
-    agg = get_chart_agg(pair="USDT/UAH", timeframe="1m", exchange=exchange)
+    cfg = _PERIOD_CONFIG[period]
+    agg = get_chart_agg(pair="USDT/UAH", timeframe=cfg["timeframe"], exchange=exchange)
 
     if agg.insufficient_data or not agg.points:
-        return {"summary": [], "chart": [], "note": "Недостаточно истории за 30 дней."}
+        return {
+            "summary": {},
+            "chart": [],
+            "note": f"Недостаточно истории за {cfg['label']}.",
+        }
 
-    # Схлопываем 2-часовые бакеты → дневные (ts // 86400 * 86400)
-    daily_buy: dict[int, list[float]] = defaultdict(list)
-    daily_sell: dict[int, list[float]] = defaultdict(list)
+    # Схлопываем мелкие бакеты в бакеты нужного размера
+    bucket_sec = cfg["bucket_sec"]
+    bucket_buy: dict[int, list[float]] = defaultdict(list)
+    bucket_sell: dict[int, list[float]] = defaultdict(list)
     for pt in agg.points:
-        day_ts = (pt.ts // 86400) * 86400
-        daily_buy[day_ts].append(pt.buy_price)
-        daily_sell[day_ts].append(pt.sell_price)
+        bk = (pt.ts // bucket_sec) * bucket_sec
+        bucket_buy[bk].append(pt.buy_price)
+        bucket_sell[bk].append(pt.sell_price)
 
-    daily_points: list[dict] = []
-    for day_ts in sorted(daily_buy):
-        b_prices = daily_buy[day_ts]
-        s_prices = daily_sell[day_ts]
-        daily_points.append({
-            "ts": day_ts,
-            "buy_price": round(statistics.median(b_prices), 4),
-            "sell_price": round(statistics.median(s_prices), 4),
+    chart_points: list[dict] = []
+    for bk in sorted(bucket_buy):
+        chart_points.append({
+            "ts": bk,
+            "buy_price": round(statistics.median(bucket_buy[bk]), 4),
+            "sell_price": round(statistics.median(bucket_sell[bk]), 4),
         })
 
-    # Сводная статистика по дневному ряду
-    all_buy = [p["buy_price"] for p in daily_points]
-    all_sell = [p["sell_price"] for p in daily_points]
-    all_spreads = [p["sell_price"] - p["buy_price"] for p in daily_points]
+    # Сводная статистика
+    all_buy = [p["buy_price"] for p in chart_points]
+    all_sell = [p["sell_price"] for p in chart_points]
+    all_spreads = [p["sell_price"] - p["buy_price"] for p in chart_points]
 
     buy_min = round(min(all_buy), 4)
     buy_max = round(max(all_buy), 4)
@@ -184,11 +203,10 @@ def _collect_market_payload(exchange: str) -> dict[str, Any]:
     sell_avg = round(statistics.mean(all_sell), 4)
     spread_avg = round(statistics.mean(all_spreads), 4)
 
-    current_buy = daily_points[-1]["buy_price"]
-    current_sell = daily_points[-1]["sell_price"]
+    current_buy = chart_points[-1]["buy_price"]
+    current_sell = chart_points[-1]["sell_price"]
     current_spread = round(current_sell - current_buy, 4)
 
-    # Где текущий BUY относительно 30-дневного диапазона (0% = минимум, 100% = максимум)
     buy_range = buy_max - buy_min
     buy_position_pct = round((current_buy - buy_min) / buy_range * 100, 1) if buy_range else 50.0
 
@@ -204,29 +222,30 @@ def _collect_market_payload(exchange: str) -> dict[str, Any]:
     summary = {
         "exchange": exchange,
         "pair": "USDT/UAH",
-        "period_days": len(daily_points),
+        "period_label": cfg["label"],
+        "point_count": len(chart_points),
         "buy": {
             "current": current_buy,
-            "min_30d": buy_min,
-            "max_30d": buy_max,
-            "avg_30d": buy_avg,
+            "min_p": buy_min,
+            "max_p": buy_max,
+            "avg_p": buy_avg,
             "position_pct": buy_position_pct,
             "phase": buy_phase,
         },
         "sell": {
             "current": current_sell,
-            "min_30d": sell_min,
-            "max_30d": sell_max,
-            "avg_30d": sell_avg,
+            "min_p": sell_min,
+            "max_p": sell_max,
+            "avg_p": sell_avg,
         },
         "spread": {
             "current": current_spread,
-            "avg_30d": spread_avg,
+            "avg_p": spread_avg,
             "vs_avg": round(current_spread - spread_avg, 4),
         },
     }
 
-    return {"summary": summary, "chart": daily_points}
+    return {"summary": summary, "chart": chart_points}
 
 
 # ── Эндпоинт ─────────────────────────────────────────────────────────────────
@@ -247,6 +266,11 @@ async def ai_analyze(
         raise HTTPException(422, detail="mode must be 'sessions' or 'market'")
     if body.exchange not in ("binance", "bybit"):
         raise HTTPException(422, detail="exchange must be 'binance' or 'bybit'")
+    if body.period not in _VALID_PERIODS:
+        raise HTTPException(
+            400,
+            detail=f"period должен быть одним из: {', '.join(sorted(_VALID_PERIODS))}",
+        )
 
     if body.mode == "sessions":
         payload = _collect_sessions_payload(body.exchange)
@@ -256,7 +280,7 @@ async def ai_analyze(
                 analysis="Пока нет закрытых сессий для анализа. Закрой первую сессию — и агент даст комментарий.",
             )
     else:
-        payload = _collect_market_payload(body.exchange)
+        payload = _collect_market_payload(body.exchange, body.period)
 
     try:
         text = await analyze(body.mode, payload)

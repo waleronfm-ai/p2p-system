@@ -136,11 +136,11 @@ def _build_sessions_message(payload: dict[str, Any]) -> str:
 def _build_market_message(payload: dict[str, Any]) -> str:
     """
     payload ожидает:
-      summary: dict  — {exchange, pair, period_days,
-                         buy: {current, min_30d, max_30d, avg_30d, position_pct, phase},
-                         sell: {current, min_30d, max_30d, avg_30d},
-                         spread: {current, avg_30d, vs_avg}}
-      chart:   list[dict]  — дневные точки {ts, buy_price, sell_price}
+      summary: dict  — {exchange, pair, period_label, point_count,
+                         buy: {current, min_p, max_p, avg_p, position_pct, phase},
+                         sell: {current, min_p, max_p, avg_p},
+                         spread: {current, avg_p, vs_avg}}
+      chart:   list[dict]  — точки {ts, buy_price, sell_price}
       note:    str | отсутствует  — сообщение если данных недостаточно
     """
     lines: list[str] = ["## Рыночная аналитика USDT/UAH\n"]
@@ -155,24 +155,24 @@ def _build_market_message(payload: dict[str, Any]) -> str:
     if s:
         exch = s.get("exchange", "н/д").upper()
         pair = s.get("pair", "н/д")
-        period = s.get("period_days", "н/д")
-        lines.append(f"Биржа: {exch} | Пара: {pair} | Период: {period} дн.\n")
+        period_label = s.get("period_label", "н/д")
+        lines.append(f"Биржа: {exch} | Пара: {pair} | Горизонт: {period_label}\n")
 
         buy: dict = s.get("buy") or {}
         if buy:
             lines.append("### BUY (покупаем USDT)")
             cur = buy.get("current")
-            bmin = buy.get("min_30d")
-            bmax = buy.get("max_30d")
-            bavg = buy.get("avg_30d")
+            bmin = buy.get("min_p")
+            bmax = buy.get("max_p")
+            bavg = buy.get("avg_p")
             pct = buy.get("position_pct")
             phase = buy.get("phase", "н/д")
             if cur is not None:
                 lines.append(f"- Текущий курс: ₴{cur:.2f}")
             if bmin is not None and bmax is not None:
-                lines.append(f"- Диапазон 30 дн.: ₴{bmin:.2f} – ₴{bmax:.2f}")
+                lines.append(f"- Диапазон за {period_label}: ₴{bmin:.2f} – ₴{bmax:.2f}")
             if bavg is not None:
-                lines.append(f"- Средний 30 дн.: ₴{bavg:.2f}")
+                lines.append(f"- Средний за {period_label}: ₴{bavg:.2f}")
             if pct is not None:
                 lines.append(f"- Позиция в диапазоне: {pct:.1f}% ({phase})")
             lines.append("")
@@ -181,27 +181,27 @@ def _build_market_message(payload: dict[str, Any]) -> str:
         if sell:
             lines.append("### SELL (продаём USDT)")
             cur = sell.get("current")
-            smin = sell.get("min_30d")
-            smax = sell.get("max_30d")
-            savg = sell.get("avg_30d")
+            smin = sell.get("min_p")
+            smax = sell.get("max_p")
+            savg = sell.get("avg_p")
             if cur is not None:
                 lines.append(f"- Текущий курс: ₴{cur:.2f}")
             if smin is not None and smax is not None:
-                lines.append(f"- Диапазон 30 дн.: ₴{smin:.2f} – ₴{smax:.2f}")
+                lines.append(f"- Диапазон за {period_label}: ₴{smin:.2f} – ₴{smax:.2f}")
             if savg is not None:
-                lines.append(f"- Средний 30 дн.: ₴{savg:.2f}")
+                lines.append(f"- Средний за {period_label}: ₴{savg:.2f}")
             lines.append("")
 
         spread: dict = s.get("spread") or {}
         if spread:
             lines.append("### Спред BUY→SELL")
             cur = spread.get("current")
-            avg = spread.get("avg_30d")
+            avg = spread.get("avg_p")
             vs = spread.get("vs_avg")
             if cur is not None:
                 lines.append(f"- Текущий: ₴{cur:.2f}")
             if avg is not None:
-                lines.append(f"- Средний 30 дн.: ₴{avg:.2f}")
+                lines.append(f"- Средний за {period_label}: ₴{avg:.2f}")
             if vs is not None:
                 sign = "+" if vs >= 0 else ""
                 lines.append(f"- Отклонение от среднего: {sign}₴{vs:.2f}")
@@ -209,9 +209,11 @@ def _build_market_message(payload: dict[str, Any]) -> str:
 
     chart: list[dict] = payload.get("chart", [])
     if chart:
-        lines.append(f"### Дневной ряд ({len(chart)} точек, хронологически)\n")
+        period_label = (payload.get("summary") or {}).get("period_label", "")
+        header = f"### Ценовой ряд ({len(chart)} точек за {period_label}, хронологически)\n" if period_label else f"### Ценовой ряд ({len(chart)} точек, хронологически)\n"
+        lines.append(header)
         lines.append("ts_unix | BUY ₴ | SELL ₴")
-        for pt in chart[-20:]:
+        for pt in chart[-24:]:
             ts = pt.get("ts", "?")
             buy_p = pt.get("buy_price", 0)
             sell_p = pt.get("sell_price", 0)
