@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { analyzeAI } from '../lib/api'
 
-type Mode = 'sessions' | 'market'
+type Mode = 'sessions' | 'position' | 'market'
 
 const MODE_LABELS: Record<Mode, string> = {
   sessions: 'Разбор сессий',
+  position: 'Текущая сессия',
   market: 'Рынок',
 }
 
 const MODE_HINTS: Record<Mode, string> = {
   sessions: 'последние закрытые сессии',
+  position: 'открытая позиция сейчас',
   market: '30 дней истории',
 }
 
@@ -56,7 +58,7 @@ export function AIAgentCard() {
 
       {/* Кнопки */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {(['sessions', 'market'] as Mode[]).map((mode) => {
+        {(['sessions', 'position', 'market'] as Mode[]).map((mode) => {
           const isThisActive = activeMode === mode
           const isDisabled = loading
 

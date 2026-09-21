@@ -325,7 +325,7 @@ export async function fetchSessions(): Promise<SessionOut[]> {
 // ---------------------------------------------------------------------------
 
 export async function analyzeAI(
-  mode: 'sessions' | 'market',
+  mode: 'sessions' | 'market' | 'position',
   exchange = 'binance',
 ): Promise<string> {
   try {
