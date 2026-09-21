@@ -392,7 +392,7 @@ async def analyze(mode: str, payload: dict[str, Any]) -> str:
     }
     body = {
         "model": settings.anthropic_model,
-        "max_tokens": 1024,
+        "max_tokens": 2500,  # потолок, не цель: sessions/market завершаются кратко сами; запас нужен для подробного position-разбора с вилкой сценариев
         "system": _SYSTEM_PROMPT,
         "messages": [{"role": "user", "content": user_message}],
     }
